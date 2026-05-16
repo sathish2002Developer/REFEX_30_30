@@ -143,23 +143,31 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
   };
 
   return (
-    <section className="relative flex items-center justify-center overflow-hidden pt-16 md:pt-20 min-h-[min(620px,88svh)] md:min-h-[min(700px,85svh)] bg-neutral-950">
+    <section className="relative flex items-center justify-center overflow-hidden pt-16 md:pt-20 min-h-[100svh] md:min-h-[min(700px,85svh)] bg-neutral-950">
+      <div
+        className="absolute inset-0 md:hidden pointer-events-none bg-gradient-to-b from-neutral-950 via-[#14100a] to-neutral-950"
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 md:hidden pointer-events-none bg-[radial-gradient(ellipse_at_50%_40%,_rgba(212,175,55,0.16)_0%,_transparent_62%)]"
+        aria-hidden
+      />
       <img
         src={img}
         alt=""
-        className="absolute inset-0 w-full h-full object-contain object-center pointer-events-none"
+        className="hidden md:block absolute inset-0 w-full h-full object-contain object-center pointer-events-none"
         loading="eager"
         decoding="async"
       />
 
       <div
-        className="absolute inset-0 bg-black pointer-events-none"
+        className="absolute inset-0 bg-black pointer-events-none hidden md:block"
         style={{ opacity: overlayAlpha }}
       />
 
       {config.radial_glow_enabled && (
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none hidden md:block"
           style={{
             background: `radial-gradient(ellipse at center, rgba(212,175,55,${
               0.12 * radialStrength
@@ -169,7 +177,7 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
       )}
 
       {config.particles_enabled && (
-        <div className="absolute inset-0 z-[1]">
+        <div className="absolute inset-0 z-[1] hidden md:block">
           <ParticleField
             enabled={config.particles_enabled}
             opacity={config.particle_canvas_opacity_percent}
@@ -178,7 +186,7 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
       )}
 
       {config.floating_orbs_enabled && (
-        <div className="absolute inset-0 pointer-events-none z-[2]">
+        <div className="absolute inset-0 pointer-events-none z-[2] hidden md:block">
           <div className="absolute top-[15%] right-[10%] w-[250px] h-[250px] bg-amber-100/20 rounded-full blur-[100px] animate-float-slow" />
           <div className="absolute bottom-[20%] left-[8%] w-[200px] h-[200px] bg-amber-50/30 rounded-full blur-[80px] animate-float-medium" />
           <div className="absolute top-[45%] left-[55%] w-[120px] h-[120px] bg-amber-100/15 rounded-full blur-[60px] animate-pulse-glow" />
@@ -186,7 +194,7 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
       )}
 
       {config.rings_enabled && (
-        <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden hidden md:flex items-center justify-center">
           <div
             className="w-[350px] h-[350px] md:w-[500px] md:h-[500px] border border-amber-300/20 rounded-full animate-ring-rotate"
             style={{ animationDuration: `${config.ring_rotate_seconds}s` }}
@@ -199,7 +207,7 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
       )}
 
       {config.corner_decorations_enabled && (
-        <div className="absolute inset-0 pointer-events-none z-[2]">
+        <div className="absolute inset-0 pointer-events-none z-[2] hidden md:block">
           <div className="absolute top-14 left-6 md:left-16 w-px h-10 bg-gradient-to-b from-amber-300 to-transparent" />
           <div className="absolute top-14 left-6 md:left-16 h-px w-8 bg-gradient-to-r from-amber-300 to-transparent" />
           <div className="absolute bottom-14 right-6 md:right-16 w-px h-10 bg-gradient-to-t from-amber-300 to-transparent" />

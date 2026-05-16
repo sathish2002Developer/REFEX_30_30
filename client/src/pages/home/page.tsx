@@ -105,7 +105,7 @@ export default function Home() {
         <img
           src={img}
           alt="Refex Group Leadership"
-          className="absolute  w-full h-full object-contain object-top"
+          className="absolute  w-full h-full object-cover md:object-contain object-top"
         />
 
         {/* Dark overlay for text readability */}
@@ -144,13 +144,19 @@ export default function Home() {
         <div className="relative z-10 w-full px-6 md:px-16 lg:px-24 text-center py-6 md:py-8">
           
           {/* Top label — centered */}
-          <div className={`mb-2 pt-1 ${heroLoaded ? "animate-hero-reveal animate-stagger-1 opacity-0" : "opacity-0"}`}>
-            <span className="inline-flex items-center gap-2 text-amber-300 text-xs font-sans tracking-[0.3em] uppercase">
-              <span className="w-6 h-px bg-amber-400" />
-              Refex Group · Leadership Vision · May 22–23, 2026
-              <span className="w-6 h-px bg-amber-400" />
-            </span>
-          </div>
+          <div
+  className={`mb-2 pt-4 md:pt-1 ${
+    heroLoaded
+      ? "animate-hero-reveal animate-stagger-1 opacity-0"
+      : "opacity-0"
+  }`}
+>
+  <span className="inline-flex items-center gap-2 text-amber-300 text-xs font-sans tracking-[0.3em] uppercase">
+    <span className="w-6 h-px bg-amber-400" />
+    Refex Group · Leadership Vision · May 22–23, 2026
+    <span className="w-6 h-px bg-amber-400" />
+  </span>
+</div>
 
           {/* 30 BY 30 Lockup — centered and more dramatic */}
           <div className={`mb-3 ${heroLoaded ? "animate-hero-reveal animate-stagger-2 opacity-0" : "opacity-0"}`}>
@@ -226,9 +232,9 @@ export default function Home() {
           </div>
 
           {/* Hashtags — centered */}
-          <div className={`pb-2 ${heroLoaded ? "animate-hero-reveal animate-stagger-8 opacity-0" : "opacity-0"}`}>
-            <div className="flex items-center justify-center gap-2 text-xs font-sans text-gray-400 tracking-wide">
-              <span className="w-4 h-px bg-gray-500" />
+          <div className={`${heroLoaded ? "animate-hero-reveal animate-stagger-8 opacity-0" : "opacity-0"}`}>
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs font-sans text-gray-300 tracking-wide px-2">
+              <span className="hidden sm:block w-4 h-px bg-gray-500 shrink-0" />
               <span>#DreamBig</span>
               <span className="text-amber-400/60">·</span>
               <span>#BuildTogether</span>
@@ -236,18 +242,22 @@ export default function Home() {
               <span>#30By30</span>
               <span className="text-amber-400/60">·</span>
               <span>#ThinkAudaciously</span>
-              <span className="w-4 h-px bg-gray-500" />
+              <span className="hidden sm:block w-4 h-px bg-gray-500 shrink-0" />
             </div>
           </div>
-        </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-10">
-          <span className="text-[10px] font-sans text-gray-400 tracking-[0.25em] uppercase">
-            Scroll
-          </span>
-          <div className="w-px h-6 bg-gray-500 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-b from-amber-400 to-transparent animate-bounce" />
+          <div
+            className={`mt-5 md:mt-7 flex flex-col items-center gap-1.5 pointer-events-none ${
+              heroLoaded ? "animate-hero-reveal opacity-0" : "opacity-0"
+            }`}
+            style={{ animationDelay: "1.25s" }}
+          >
+            <span className="block text-[10px] font-sans font-medium text-amber-200/95 tracking-[0.3em] uppercase pl-[0.3em] drop-shadow-[0_1px_6px_rgba(0,0,0,0.65)]">
+              Scroll
+            </span>
+            <div className="w-px h-7 bg-amber-400/50 relative overflow-hidden rounded-full">
+              <div className="absolute top-0 left-0 w-full h-2.5 bg-gradient-to-b from-amber-300 to-transparent animate-bounce" />
+            </div>
           </div>
         </div>
       </section>
