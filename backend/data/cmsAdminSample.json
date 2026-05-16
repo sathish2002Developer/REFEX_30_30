@@ -1,0 +1,8 @@
+{
+  "email": "cms.admin@refex.local",
+  "password": "RefexCmsDev2026!",
+  "first_name": "CMS",
+  "last_name": "Admin",
+  "mobile_number": "0000000000",
+  "_comment": "Local/demo only. Run: npm run seed:cms-admin (from backend/). Change password in production; remove or rotate this file if you commit secrets."
+}

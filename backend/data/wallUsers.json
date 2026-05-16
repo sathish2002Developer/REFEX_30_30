@@ -1,0 +1,190 @@
+{
+  "users": [
+    {
+      "name": "Anil Jain",
+      "designation": "Chairman & MD",
+      "team_entity": "Refex Group",
+      "email": "aniljain@refex.co.in"
+    },
+    {
+      "name": "Dinesh Agarwal",
+      "designation": "Group CEO",
+      "team_entity": "Refex Group",
+      "email": "dinesh@refex.co.in"
+    },
+    {
+      "name": "Yash Jain",
+      "designation": "",
+      "team_entity": "Refex Group",
+      "email": "yash@refex.co.in"
+    },
+    {
+      "name": "Purvesh Kapadia",
+      "designation": "Group CHRO",
+      "team_entity": "Refex Group",
+      "email": "purvesh.k@refex.co.in"
+    },
+    {
+      "name": "Anirudh Arun",
+      "designation": "CEO",
+      "team_entity": "Refex Mobility",
+      "email": "anirudh.arun@refex.co.in"
+    },
+    {
+      "name": "Meet Goradia",
+      "designation": "COO",
+      "team_entity": "Refex Mobility",
+      "email": "meet.g@refex.co.in"
+    },
+    {
+      "name": "Ankit Grover",
+      "designation": "Chief Business Officer",
+      "team_entity": "Refex Mobility",
+      "email": "ankit.grover@refex.co.in"
+    },
+    {
+      "name": "Shankar Sivan",
+      "designation": "CEO",
+      "team_entity": "Solar & Wind IPP",
+      "email": "shankar.s@refex.co.in"
+    },
+    {
+      "name": "Kalpesh Kumar",
+      "designation": "CEO",
+      "team_entity": "CBG",
+      "email": "kalpesh.k@refex.co.in"
+    },
+    {
+      "name": "Rajeev Vaze",
+      "designation": "COO",
+      "team_entity": "Refex Renewables",
+      "email": "rajeev.v@refex.co.in"
+    },
+    {
+      "name": "Jagdish Jain",
+      "designation": "Business Head",
+      "team_entity": "Ash Utilization & Coal Handling",
+      "email": "jagdish@refex.co.in"
+    },
+    {
+      "name": "Vishesh Mehta",
+      "designation": "Head - Business Development",
+      "team_entity": "Ash Utilization & Coal Handling",
+      "email": "vishesh.h@refex.co.in"
+    },
+    {
+      "name": "Tarun Arora",
+      "designation": "Chief Business Officer",
+      "team_entity": "Ash Utilization & Coal Handling",
+      "email": "tarun.a@refex.co.in"
+    },
+    {
+      "name": "Harshvardhan Dugar",
+      "designation": "Senior Vice President",
+      "team_entity": "Ash Utilization & Coal Handling",
+      "email": "harshvardhan.dugar@refex.co.in"
+    },
+    {
+      "name": "Abhishek Kumar",
+      "designation": "CBO",
+      "team_entity": "Sparzana Aviation",
+      "email": "abhishek.kumar@sparzana.com"
+    },
+    {
+      "name": "Romy Juneja",
+      "designation": "Director",
+      "team_entity": "Airports & Transportation",
+      "email": "romy.j@refex.co.in"
+    },
+    {
+      "name": "Sidharath Kapur",
+      "designation": "Director",
+      "team_entity": "Airports & Transportation",
+      "email": "sidharath.k@refex.co.in"
+    },
+    {
+      "name": "Madhusudan Khemka",
+      "designation": "",
+      "team_entity": "Venwind Refex",
+      "email": "madhusudan.k@venwindrefex.com"
+    },
+    {
+      "name": "Anirudh Khemka",
+      "designation": "CEO",
+      "team_entity": "Venwind Refex",
+      "email": "anirudh.k@venwindrefex.com"
+    },
+    {
+      "name": "Archit Khemka",
+      "designation": "CTO",
+      "team_entity": "Venwind Refex",
+      "email": "archit.k@venwindrefex.com"
+    },
+    {
+      "name": "Dhruv Varshney",
+      "designation": "",
+      "team_entity": "",
+      "email": "dhruv.v@venwindrefex.com"
+    },
+    {
+      "name": "Balasubramaniam M",
+      "designation": "CEO",
+      "team_entity": "3i MedTech",
+      "email": "bala.m@3imedtech.com"
+    },
+    {
+      "name": "Dinesh Koka",
+      "designation": "Chief Business Officer",
+      "team_entity": "3i MedTech",
+      "email": "dinesh.koka@3imedtech.com"
+    },
+    {
+      "name": "Hans Kamma",
+      "designation": "CEO",
+      "team_entity": "Refex Life Sciences",
+      "email": "hanumantha.rao@refex.co.in"
+    },
+    {
+      "name": "Raghavendra Rao",
+      "designation": "CFO",
+      "team_entity": "Refex Life Sciences",
+      "email": ""
+    },
+    {
+      "name": "Srinivasan Pagadala",
+      "designation": "CHRO",
+      "team_entity": "Refex Life Sciences",
+      "email": ""
+    },
+    {
+      "name": "Susmitha Siripurapu",
+      "designation": "Chief of Staff",
+      "team_entity": "Refex Group",
+      "email": "susmitha.s@refex.co.in"
+    },
+    {
+      "name": "Saravanan V",
+      "designation": "Chief of Staff",
+      "team_entity": "Refex Group",
+      "email": "saravanan.v@refex.co.in"
+    },
+    {
+      "name": "Sandeep Kumar",
+      "designation": "Chief of Staff",
+      "team_entity": "Refex Group",
+      "email": "sandeep.k@refex.co.in"
+    },
+    {
+      "name": "Jahanvi Khedwal",
+      "designation": "Chief of Staff",
+      "team_entity": "Refex Group",
+      "email": "jahanvi.k@refex.co.in"
+    },
+    {
+      "name": "Pasupathinath R",
+      "designation": "Chief of Staff",
+      "team_entity": "Refex Group",
+      "email": "pasupathinath.r@refex.co.in"
+    }
+  ]
+}

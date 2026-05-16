@@ -1,0 +1,312 @@
+import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
+import ScrollReveal from "../../components/ScrollReveal";
+
+function ParticleField() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationId: number;
+    const particles: { x: number; y: number; size: number; speedX: number; speedY: number; opacity: number }[] = [];
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    for (let i = 0; i < 80; i++) {
+      particles.push({
+        x: Math.random() * canvas.offsetWidth,
+        y: Math.random() * canvas.offsetHeight,
+        size: Math.random() * 2.5 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.4,
+        speedY: (Math.random() - 0.5) * 0.4,
+        opacity: Math.random() * 0.6 + 0.2,
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+
+      particles.forEach((p, i) => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+
+        if (p.x < 0 || p.x > canvas.offsetWidth) p.speedX *= -1;
+        if (p.y < 0 || p.y > canvas.offsetHeight) p.speedY *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(212, 175, 55, ${p.opacity})`;
+        ctx.fill();
+
+        particles.forEach((p2, j) => {
+          if (i === j) return;
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(212, 175, 55, ${0.08 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        });
+      });
+
+      animationId = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      style={{ opacity: 0.7 }}
+    />
+  );
+}
+
+export default function Home() {
+  const [heroLoaded, setHeroLoaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setHeroLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-white">
+      <Navbar />
+
+      {/* Hero Section — Full image background */}
+      <section className="relative flex items-center justify-center overflow-hidden pt-16 md:pt-20 min-h-[320px] md:min-h-[360px] lg:min-h-[400px]">
+        {/* Background image — positioned to show all leaders */}
+        <img
+          src="https://storage.readdy-site.link/project_files/04e95ea7-e673-4199-a33e-5a962ce92760/15181ef8-7c35-4bb8-b0ba-6d5eb33b5694_Home.jpg?v=834bb40ea63c5255d57a7b7d74094acb"
+          alt="Refex Group Leadership"
+          className="absolute  w-full h-full object-cover object-top"
+        />
+
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+
+        {/* Warm radial glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(212,175,55,0.12)_0%,_transparent_70%)] pointer-events-none" />
+
+        {/* Particle canvas background */}
+        <div className="absolute inset-0">
+          <ParticleField />
+        </div>
+
+        {/* Floating orbs */}
+        <div className="absolute inset-0 pointer-events-none z-[2]">
+          <div className="absolute top-[15%] right-[10%] w-[250px] h-[250px] bg-amber-100/20 rounded-full blur-[100px] animate-float-slow" />
+          <div className="absolute bottom-[20%] left-[8%] w-[200px] h-[200px] bg-amber-50/30 rounded-full blur-[80px] animate-float-medium" />
+          <div className="absolute top-[45%] left-[55%] w-[120px] h-[120px] bg-amber-100/15 rounded-full blur-[60px] animate-pulse-glow" />
+        </div>
+
+        {/* Single elegant floating ring */}
+        <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden flex items-center justify-center">
+          <div className="w-[350px] h-[350px] md:w-[500px] md:h-[500px] border border-amber-300/20 rounded-full animate-ring-rotate" style={{ animationDuration: "40s" }} />
+          <div className="absolute w-[300px] h-[300px] md:w-[450px] md:h-[450px] border border-amber-200/15 rounded-full animate-ring-reverse" style={{ animationDuration: "30s" }} />
+        </div>
+
+        {/* Decorative corner lines */}
+        <div className="absolute inset-0 pointer-events-none z-[2]">
+          <div className="absolute top-14 left-6 md:left-16 w-px h-10 bg-gradient-to-b from-amber-300 to-transparent" />
+          <div className="absolute top-14 left-6 md:left-16 h-px w-8 bg-gradient-to-r from-amber-300 to-transparent" />
+          <div className="absolute bottom-14 right-6 md:right-16 w-px h-10 bg-gradient-to-t from-amber-300 to-transparent" />
+          <div className="absolute bottom-14 right-6 md:right-16 h-px w-8 bg-gradient-to-l from-amber-300 to-transparent" />
+        </div>
+
+        {/* Main centered content */}
+        <div className="relative z-10 w-full px-6 md:px-16 lg:px-24 text-center py-6 md:py-8">
+          
+          {/* Top label — centered */}
+          <div className={`mb-2 pt-1 ${heroLoaded ? "animate-hero-reveal animate-stagger-1 opacity-0" : "opacity-0"}`}>
+            <span className="inline-flex items-center gap-2 text-amber-300 text-xs font-sans tracking-[0.3em] uppercase">
+              <span className="w-6 h-px bg-amber-400" />
+              Refex Group · Leadership Vision · May 22–23, 2026
+              <span className="w-6 h-px bg-amber-400" />
+            </span>
+          </div>
+
+          {/* 30 BY 30 Lockup — centered and more dramatic */}
+          <div className={`mb-3 ${heroLoaded ? "animate-hero-reveal animate-stagger-2 opacity-0" : "opacity-0"}`}>
+            <div className="flex items-center justify-center gap-0 leading-none font-serif">
+              <span className="text-[3.5rem] sm:text-[5rem] md:text-[7rem] lg:text-[9rem] font-bold tracking-tighter leading-none pb-1 animate-shimmer-text"
+               style={{
+                padding: "8px"
+               }}>
+                30
+              </span>
+              <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-400 italic font-light mx-1 md:mx-2 -translate-y-1 md:-translate-y-3">
+                BY
+              </span>
+                 <span 
+                  style={{
+                    padding: "8px"
+                   }}
+                 className="text-[3.5rem] sm:text-[5rem] md:text-[7rem] lg:text-[9rem] font-bold tracking-tighter leading-none pb-1 animate-shimmer-text">
+                30
+              </span>
+             
+            </div>
+          </div>
+
+          {/* Animated gold line — centered */}
+          <div className={`flex justify-center mb-4 ${heroLoaded ? "animate-hero-reveal animate-stagger-3 opacity-0" : "opacity-0"}`}>
+            <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+          </div>
+
+          {/* Tagline */}
+          <div className={`mb-2 ${heroLoaded ? "animate-hero-reveal animate-stagger-4 opacity-0" : "opacity-0"}`}>
+            <p className="text-lg md:text-xl lg:text-2xl font-serif text-white font-light tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              A Vision to Build a{" "}
+              <em className="text-amber-300 not-italic font-normal">Generational Enterprise</em>
+            </p>
+          </div>
+
+          {/* Subtitle */}
+          <div className={`mb-3 ${heroLoaded ? "animate-hero-reveal animate-stagger-5 opacity-0" : "opacity-0"}`}>
+            <p className="text-xs md:text-sm font-sans text-gray-300 tracking-[0.15em] uppercase drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">
+              USD 30 Billion by 2030 · Refex Group Leadership Vision
+            </p>
+          </div>
+
+          {/* Quote — centered card style */}
+          <div className={`max-w-lg mx-auto mb-5 ${heroLoaded ? "animate-hero-reveal animate-stagger-6 opacity-0" : "opacity-0"}`}>
+            <div className="relative px-5 py-3 border border-amber-400/40 bg-black/30 backdrop-blur-sm rounded-sm">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                <span className="text-amber-400 text-xl font-serif">&ldquo;</span>
+              </div>
+              <p className="text-sm md:text-base font-serif italic text-gray-200 leading-relaxed">
+                This is not an offsite. This is a defining leadership moment for Refex Group.
+              </p>
+            </div>
+          </div>
+
+          {/* Buttons — centered, more premium */}
+          <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 mb-3 ${heroLoaded ? "animate-hero-reveal animate-stagger-7 opacity-0" : "opacity-0"}`}>
+            <Link
+              to="/wall"
+              className="group inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-white font-sans font-semibold text-sm tracking-wide rounded-full hover:bg-amber-600 transition-all duration-300 hover:gap-4 hover:scale-105 hover:shadow-[0_8px_30px_rgba(212,175,55,0.4)]"
+            >
+              <span>Record My Commitment</span>
+              <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
+            </Link>
+            <Link
+              to="/vision"
+              className="group inline-flex items-center gap-2 px-6 py-3 border-2 border-amber-400/70 text-amber-300 font-sans font-semibold text-sm tracking-wide rounded-full hover:bg-amber-500/20 transition-all duration-300 hover:border-amber-400 hover:gap-4 hover:scale-105 hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)]"
+            >
+              <span>Explore the Vision</span>
+              <span className="transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
+            </Link>
+          </div>
+
+          {/* Hashtags — centered */}
+          <div className={`pb-2 ${heroLoaded ? "animate-hero-reveal animate-stagger-8 opacity-0" : "opacity-0"}`}>
+            <div className="flex items-center justify-center gap-2 text-xs font-sans text-gray-400 tracking-wide">
+              <span className="w-4 h-px bg-gray-500" />
+              <span>#DreamBig</span>
+              <span className="text-amber-400/60">·</span>
+              <span>#BuildTogether</span>
+              <span className="text-amber-400/60">·</span>
+              <span>#30By30</span>
+              <span className="text-amber-400/60">·</span>
+              <span>#ThinkAudaciously</span>
+              <span className="w-4 h-px bg-gray-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-10">
+          <span className="text-[10px] font-sans text-gray-400 tracking-[0.25em] uppercase">
+            Scroll
+          </span>
+          <div className="w-px h-6 bg-gray-500 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-b from-amber-400 to-transparent animate-bounce" />
+          </div>
+        </div>
+      </section>
+
+      {/* Marquee Section */}
+      <section className="relative py-3 overflow-hidden bg-white border-t border-amber-100/30">
+        <div className="flex animate-marquee whitespace-nowrap relative z-10">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center gap-8 px-4">
+              <span className="text-amber-600 font-sans text-sm font-semibold tracking-wide">Dream Together</span>
+              <span className="text-amber-300/60">·</span>
+              <span className="text-amber-600 font-sans text-sm font-semibold tracking-wide">Think Audaciously</span>
+              <span className="text-amber-300/60">·</span>
+              <span className="text-amber-600 font-sans text-sm font-semibold tracking-wide">Build as One</span>
+              <span className="text-amber-300/60">·</span>
+              <span className="text-amber-600 font-sans text-sm font-semibold tracking-wide">USD 30 Billion by 2030</span>
+              <span className="text-amber-300/60">·</span>
+              <span className="text-amber-600 font-sans text-sm font-semibold tracking-wide">Refex 30 by 30</span>
+              <span className="text-amber-300/60">·</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-white py-10 md:py-14 px-6 md:px-16 lg:px-24 relative overflow-hidden border-t border-amber-100/30">
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <ScrollReveal>
+            <div className="flex items-center justify-center gap-4 mb-3">
+              <span className="w-8 h-px bg-gradient-to-r from-transparent to-amber-400/40" />
+              <span className="text-amber-600 text-xs font-sans tracking-[0.3em] uppercase">
+                Your Turn
+              </span>
+              <span className="w-8 h-px bg-gradient-to-l from-transparent to-amber-400/40" />
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={100}>
+            <h2 className="text-2xl md:text-4xl font-serif text-gray-900 mb-3 leading-tight">
+              Make your personal{" "}
+              <em className="text-gradient-gold">leadership commitment</em>{" "}
+              to Refex 2030
+            </h2>
+          </ScrollReveal>
+          <ScrollReveal delay={200}>
+            <p className="text-sm font-sans text-gray-500 max-w-2xl mx-auto mb-6 leading-relaxed">
+              Reflect on the journey ahead. Declare your role in it. Sign your commitment to building something generational — together.
+            </p>
+          </ScrollReveal>
+          <ScrollReveal delay={300}>
+            <Link
+              to="/wall"
+              className="group inline-flex items-center gap-3 px-8 py-3 bg-amber-500 text-white font-sans font-semibold text-sm tracking-wide rounded-full hover:bg-amber-600 transition-all duration-300 hover:gap-5 hover:scale-105 hover:shadow-[0_8px_30px_rgba(212,175,55,0.4)]"
+            >
+              <span>Go to The Wall</span>
+              <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+            </Link>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+}
