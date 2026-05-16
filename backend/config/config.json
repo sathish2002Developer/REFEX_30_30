@@ -2,7 +2,7 @@
   "development": {
     "username": "root",
     "password": "RefexAdmin@",
-    "database": "refex_30_30",
+    "database": "refex_contacts",
     "host": "localhost",
     "port": 3306,
     "dialect": "mysql",
@@ -14,7 +14,7 @@
   "test": {
     "username": "root",
     "password": "RefexAdmin@",
-    "database": "refex_30_30",
+    "database": "refex_mobility",
     "host": "localhost",
     "port": 3306,
     "dialect": "mysql"
@@ -22,7 +22,7 @@
   "production": {
     "username": "root",
     "password": "RefexAdmin@",
-    "database": "refex_30_30",
+    "database": "refex_mobility",
     "host": "localhost",
     "port": 3306,
     "dialect": "mysql"

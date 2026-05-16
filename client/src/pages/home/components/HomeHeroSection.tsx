@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import img from "../../../mocks/Home.jpg";
 import type { HomeHeroConfig, HomeHeroCta } from "../../../types/homeHeroCms";
 
 function ParticleField({
@@ -144,7 +145,7 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
   return (
     <section className="relative flex items-center justify-center overflow-hidden pt-16 md:pt-20 min-h-[min(620px,88svh)] md:min-h-[min(700px,85svh)] bg-neutral-950">
       <img
-        src={config.background_image_resolved_url}
+        src={img}
         alt=""
         className="absolute inset-0 w-full h-full object-contain object-center pointer-events-none"
         loading="eager"
@@ -285,7 +286,7 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
 
       {config.scroll_indicator_enabled && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-10 pointer-events-none">
-          <span className="text-[10px] font-sans text-gray-400 tracking-[0.25em] uppercase">
+          <span className="block text-[10px] font-sans font-medium text-amber-200/95 tracking-[0.3em] uppercase pl-[0.3em] drop-shadow-[0_1px_6px_rgba(0,0,0,0.65)]">
             Scroll
           </span>
           <div className="w-px h-6 bg-gray-500 relative overflow-hidden">

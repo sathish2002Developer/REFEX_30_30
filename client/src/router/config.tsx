@@ -9,6 +9,7 @@ import CmsHeroPage from "../pages/admin/CmsHeroPage";
 import VisionCmsPage from "../pages/admin/VisionCmsPage";
 import SiteChromeCmsPage from "../pages/admin/SiteChromeCmsPage";
 import WallCmsPage from "../pages/admin/WallCmsPage";
+import WallUsersPage from "../pages/admin/WallUsersPage";
 
 const routes: RouteObject[] = [
   {
@@ -32,6 +33,7 @@ const routes: RouteObject[] = [
       { path: "cms/vision", element: <VisionCmsPage /> },
       { path: "cms/site-chrome", element: <SiteChromeCmsPage /> },
       { path: "cms/wall", element: <WallCmsPage /> },
+      { path: "wall/users", element: <WallUsersPage /> },
     ],
   },
   {

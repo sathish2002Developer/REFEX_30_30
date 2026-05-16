@@ -245,3 +245,103 @@ export async function authLogin(
 export function adminLogout(): void {
   setAdminToken(null);
 }
+
+export interface WallMemberAdminRow {
+  id: number;
+  name: string;
+  designation: string;
+  teamEntity: string;
+  team_entity: string;
+  email: string;
+  role: string;
+  initials: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WallMemberFormInput {
+  name: string;
+  email: string;
+  designation?: string;
+  teamEntity?: string;
+  isActive?: boolean;
+}
+
+async function adminJsonRequest<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<{ ok: boolean; message: string; data?: T }> {
+  const token = getAdminToken();
+  if (!token) {
+    return { ok: false, message: "Not signed in" };
+  }
+  try {
+    const res = await fetch(`${ADMIN_BASE}${path}`, {
+      ...options,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+    });
+    const json: ApiResponse<T> = await res.json().catch(() => ({
+      success: false,
+      message: "Invalid response",
+      data: null as unknown as T,
+    }));
+    return {
+      ok: res.ok && json.success,
+      message: json.message || (res.ok ? "OK" : "Request failed"),
+      data: json.data,
+    };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Network error" };
+  }
+}
+
+export async function fetchWallMembersAdmin(
+  q = "",
+  activeOnly = false
+): Promise<WallMemberAdminRow[]> {
+  const params = new URLSearchParams();
+  if (q.trim()) params.set("q", q.trim());
+  if (activeOnly) params.set("active", "true");
+  const qs = params.toString();
+  const r = await adminJsonRequest<WallMemberAdminRow[]>(
+    `/wall-members${qs ? `?${qs}` : ""}`
+  );
+  if (!r.ok || !Array.isArray(r.data)) return [];
+  return r.data;
+}
+
+export async function createWallMemberAdmin(
+  input: WallMemberFormInput
+): Promise<{ ok: boolean; message: string; data?: WallMemberAdminRow }> {
+  return adminJsonRequest<WallMemberAdminRow>("/wall-members", {
+    method: "POST",
+    body: JSON.stringify({
+      name: input.name,
+      email: input.email,
+      designation: input.designation ?? "",
+      teamEntity: input.teamEntity ?? "",
+      isActive: input.isActive ?? true,
+    }),
+  });
+}
+
+export async function updateWallMemberAdmin(
+  id: number,
+  input: Partial<WallMemberFormInput>
+): Promise<{ ok: boolean; message: string; data?: WallMemberAdminRow }> {
+  return adminJsonRequest<WallMemberAdminRow>(`/wall-members/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      ...(input.name !== undefined ? { name: input.name } : {}),
+      ...(input.email !== undefined ? { email: input.email } : {}),
+      ...(input.designation !== undefined ? { designation: input.designation } : {}),
+      ...(input.teamEntity !== undefined ? { teamEntity: input.teamEntity } : {}),
+      ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+    }),
+  });
+}

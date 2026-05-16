@@ -5,6 +5,7 @@ const cmsVisionPageController = require("../controllers/cmsVisionPage");
 const cmsWallPageController = require("../controllers/cmsWallPage");
 const cmsSiteChromeController = require("../controllers/cmsSiteChrome");
 const wallAdminActivity = require("../controllers/wallAdminActivity");
+const wallMembersController = require("../controllers/wallMembers");
 const authMiddleware = require("../middlewares/auth");
 const uploadCmsHero = require("../middlewares/uploadCmsHero");
 const uploadVisionCms = require("../middlewares/uploadVisionCms");
@@ -14,6 +15,10 @@ const {
   createUserSchema,
   updateUserSchema,
 } = require("../middlewares/userValidator");
+const {
+  createWallMemberSchema,
+  updateWallMemberSchema,
+} = require("../middlewares/wallMemberValidator");
 
 // All admin routes require authentication
 router.use(authMiddleware.requireAuth);
@@ -44,6 +49,19 @@ router.patch(
 );
 
 router.get("/wall/activity", wallAdminActivity.listWallActivity);
+
+router.get("/wall-members", wallMembersController.listWallMembers);
+router.get("/wall-members/:id", wallMembersController.getWallMemberById);
+router.post(
+  "/wall-members",
+  createWallMemberSchema,
+  wallMembersController.createWallMember
+);
+router.patch(
+  "/wall-members/:id",
+  updateWallMemberSchema,
+  wallMembersController.updateWallMemberById
+);
 
 // User management routes
 router.get("/users", usersController.getAllUsers);

@@ -1,24 +1,8 @@
-const fs = require("fs");
-const path = require("path");
 const { WallMember } = require("../models");
 const { responseStatus } = require("../helpers/response");
 const { mapWallMember, normalizeEmail } = require("../helpers/wallMember");
 const { signWallToken } = require("../middlewares/wallAuth");
-
-function reservedCmsOperatorEmails() {
-  const out = new Set();
-  try {
-    const samplePath = path.join(__dirname, "../data/cmsAdminSample.json");
-    if (fs.existsSync(samplePath)) {
-      const { email } = JSON.parse(fs.readFileSync(samplePath, "utf8"));
-      const n = normalizeEmail(email);
-      if (n) out.add(n);
-    }
-  } catch {
-    /* ignore */
-  }
-  return out;
-}
+const { reservedCmsOperatorEmails } = require("../helpers/reservedCmsEmails");
 
 const RESERVED_WALL_BLOCKED = reservedCmsOperatorEmails();
 

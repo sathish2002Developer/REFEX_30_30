@@ -107,6 +107,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/cms/wall" className={navLinkClass}>
             Wall page
           </NavLink>
+          <NavLink to="/admin/wall/users" className={navLinkClass}>
+            Wall users
+          </NavLink>
         </nav>
         <div className="p-3 border-t border-slate-800 space-y-2">
           <Link

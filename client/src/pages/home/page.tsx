@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import ScrollReveal from "../../components/ScrollReveal";
+import img from "../../mocks/Home.jpg";
+
 
 function ParticleField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -101,9 +103,9 @@ export default function Home() {
       <section className="relative flex items-center justify-center overflow-hidden pt-16 md:pt-20 min-h-[320px] md:min-h-[360px] lg:min-h-[400px]">
         {/* Background image — positioned to show all leaders */}
         <img
-          src="https://storage.readdy-site.link/project_files/04e95ea7-e673-4199-a33e-5a962ce92760/15181ef8-7c35-4bb8-b0ba-6d5eb33b5694_Home.jpg?v=834bb40ea63c5255d57a7b7d74094acb"
+          src={img}
           alt="Refex Group Leadership"
-          className="absolute  w-full h-full object-cover object-top"
+          className="absolute  w-full h-full object-contain object-top"
         />
 
         {/* Dark overlay for text readability */}
@@ -249,7 +251,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-
+                   
       {/* Marquee Section */}
       <section className="relative py-3 overflow-hidden bg-white border-t border-amber-100/30">
         <div className="flex animate-marquee whitespace-nowrap relative z-10">
