@@ -50,7 +50,7 @@ export default function WallHeader({
           <img
             src={imgSrc}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center pointer-events-none"
+            className="absolute inset-0 h-full w-full object-fill object-center pointer-events-none"
             loading="eager"
             decoding="async"
             onError={() => setHeroImgBroken(true)}

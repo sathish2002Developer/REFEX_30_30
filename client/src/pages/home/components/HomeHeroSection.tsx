@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import img from "../../../mocks/Home.jpg";
 import type { HomeHeroConfig, HomeHeroCta } from "../../../types/homeHeroCms";
+import { DEFAULT_HOME_HERO } from "../../../types/homeHeroCms";
+import "./homeHero.css";
+
+/** Visual / motion settings are fixed — not driven by CMS. */
+const DESIGN = DEFAULT_HOME_HERO;
 
 function ParticleField({
   opacity,
@@ -133,39 +137,37 @@ interface Props {
 }
 
 export default function HomeHeroSection({ config, heroLoaded }: Props) {
-  const overlayAlpha = Math.min(100, Math.max(0, config.overlay_opacity)) / 100;
+  const bgSrc =
+    config.background_image_resolved_url || config.background_image_url || "";
+  const overlayAlpha = Math.min(100, Math.max(0, DESIGN.overlay_opacity)) / 100;
   const radialStrength =
-    Math.min(100, Math.max(0, config.radial_glow_strength_percent)) / 100;
+    Math.min(100, Math.max(0, DESIGN.radial_glow_strength_percent)) / 100;
   const anim = (classes: string) => {
     if (!heroLoaded) return "opacity-0";
-    if (!config.stagger_animations_enabled) return "";
+    if (!DESIGN.stagger_animations_enabled) return "";
     return `${classes} opacity-0`;
   };
 
   return (
-    <section className="relative flex items-center justify-center overflow-hidden pt-16 md:pt-20 min-h-[100svh] md:min-h-[min(700px,85svh)] bg-neutral-950">
-      <div
-        className="absolute inset-0 md:hidden pointer-events-none bg-gradient-to-b from-neutral-950 via-[#14100a] to-neutral-950"
-        aria-hidden
-      />
-      <div
-        className="absolute inset-0 md:hidden pointer-events-none bg-[radial-gradient(ellipse_at_50%_40%,_rgba(212,175,55,0.16)_0%,_transparent_62%)]"
-        aria-hidden
-      />
-      <img
-        src={img}
-        alt=""
-        className="hidden md:block absolute inset-0 w-full h-full object-contain object-center pointer-events-none"
-        loading="eager"
-        decoding="async"
-      />
+    <section
+      className={`home-hero relative flex items-center justify-center overflow-hidden pt-16 md:pt-20 min-h-[320px] md:min-h-[360px] lg:min-h-[400px] ${heroLoaded ? "home-hero--loaded" : ""}`}
+    >
+      {bgSrc ? (
+        <img
+          src={bgSrc}
+          alt="Refex Group Leadership"
+          className="home-hero__bg-img absolute w-full h-full object-cover md:object-contain object-top md:object-center pointer-events-none"
+          loading="eager"
+          decoding="async"
+        />
+      ) : null}
 
       <div
-        className="absolute inset-0 bg-black pointer-events-none hidden md:block"
+        className="home-hero__overlay-dark absolute inset-0 bg-black pointer-events-none"
         style={{ opacity: overlayAlpha }}
       />
 
-      {config.radial_glow_enabled && (
+      {DESIGN.radial_glow_enabled && (
         <div
           className="absolute inset-0 pointer-events-none hidden md:block"
           style={{
@@ -176,16 +178,16 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
         />
       )}
 
-      {config.particles_enabled && (
+      {DESIGN.particles_enabled && (
         <div className="absolute inset-0 z-[1] hidden md:block">
           <ParticleField
-            enabled={config.particles_enabled}
-            opacity={config.particle_canvas_opacity_percent}
+            enabled={DESIGN.particles_enabled}
+            opacity={DESIGN.particle_canvas_opacity_percent}
           />
         </div>
       )}
 
-      {config.floating_orbs_enabled && (
+      {DESIGN.floating_orbs_enabled && (
         <div className="absolute inset-0 pointer-events-none z-[2] hidden md:block">
           <div className="absolute top-[15%] right-[10%] w-[250px] h-[250px] bg-amber-100/20 rounded-full blur-[100px] animate-float-slow" />
           <div className="absolute bottom-[20%] left-[8%] w-[200px] h-[200px] bg-amber-50/30 rounded-full blur-[80px] animate-float-medium" />
@@ -193,20 +195,20 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
         </div>
       )}
 
-      {config.rings_enabled && (
+      {DESIGN.rings_enabled && (
         <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden hidden md:flex items-center justify-center">
           <div
             className="w-[350px] h-[350px] md:w-[500px] md:h-[500px] border border-amber-300/20 rounded-full animate-ring-rotate"
-            style={{ animationDuration: `${config.ring_rotate_seconds}s` }}
+            style={{ animationDuration: `${DESIGN.ring_rotate_seconds}s` }}
           />
           <div
             className="absolute w-[300px] h-[300px] md:w-[450px] md:h-[450px] border border-amber-200/15 rounded-full animate-ring-reverse"
-            style={{ animationDuration: `${config.ring_reverse_seconds}s` }}
+            style={{ animationDuration: `${DESIGN.ring_reverse_seconds}s` }}
           />
         </div>
       )}
 
-      {config.corner_decorations_enabled && (
+      {DESIGN.corner_decorations_enabled && (
         <div className="absolute inset-0 pointer-events-none z-[2] hidden md:block">
           <div className="absolute top-14 left-6 md:left-16 w-px h-10 bg-gradient-to-b from-amber-300 to-transparent" />
           <div className="absolute top-14 left-6 md:left-16 h-px w-8 bg-gradient-to-r from-amber-300 to-transparent" />
@@ -225,20 +227,12 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
         </div>
 
         <div className={`mb-3 ${anim("animate-hero-reveal animate-stagger-2")}`}>
-          <div className="flex items-center justify-center gap-0 leading-none font-serif">
-            <span
-              className="text-[3.5rem] sm:text-[5rem] md:text-[7rem] lg:text-[9rem] font-bold tracking-tighter leading-none pb-1 text-hero-gold"
-              style={{ padding: "8px" }}
-            >
+          <div className="home-hero__lockup">
+            <span className="home-hero__title-num animate-shimmer-text">
               {config.title_left}
             </span>
-            <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-400 italic font-light mx-1 md:mx-2 -translate-y-1 md:-translate-y-3">
-              {config.title_middle}
-            </span>
-            <span
-              className="text-[3.5rem] sm:text-[5rem] md:text-[7rem] lg:text-[9rem] font-bold tracking-tighter leading-none pb-1 text-hero-gold"
-              style={{ padding: "8px" }}
-            >
+            <span className="home-hero__title-mid">{config.title_middle}</span>
+            <span className="home-hero__title-num animate-shimmer-text">
               {config.title_right}
             </span>
           </div>
@@ -292,7 +286,7 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
         </div>
       </div>
 
-      {config.scroll_indicator_enabled && (
+      {DESIGN.scroll_indicator_enabled && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 z-10 pointer-events-none">
           <span className="block text-[10px] font-sans font-medium text-amber-200/95 tracking-[0.3em] uppercase pl-[0.3em] drop-shadow-[0_1px_6px_rgba(0,0,0,0.65)]">
             Scroll
@@ -305,3 +299,4 @@ export default function HomeHeroSection({ config, heroLoaded }: Props) {
     </section>
   );
 }
+

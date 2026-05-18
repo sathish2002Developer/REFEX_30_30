@@ -179,6 +179,13 @@
     0 2px 4px rgba(0, 0, 0, 0.45);
 }
 
+/* Shimmer overrides static gold when both classes are present */
+.home-hero__title-num.animate-shimmer-text {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
 .home-hero__title-mid {
   font-family: ui-serif, Georgia, serif;
   font-size: clamp(1rem, 3.5vw, 2.25rem);
@@ -513,6 +520,16 @@
   .home-hero--loaded .home-hero__stagger {
     animation: none;
     opacity: 1;
+  }
+
+  .home-hero__title-num.animate-shimmer-text {
+    animation: none;
+    color: var(--hero-gold);
+    -webkit-text-fill-color: var(--hero-gold);
+    background: none;
+    text-shadow:
+      0 0 40px rgba(212, 175, 55, 0.35),
+      0 2px 4px rgba(0, 0, 0, 0.45);
   }
 
   .home-hero__scroll-pulse {

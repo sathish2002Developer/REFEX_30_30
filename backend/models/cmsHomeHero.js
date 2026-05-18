@@ -14,7 +14,6 @@ module.exports = (sequelize, DataTypes) => {
       singleton_key: {
         type: DataTypes.STRING(32),
         allowNull: false,
-        unique: true,
         defaultValue: "home",
       },
       top_label: { type: DataTypes.TEXT, allowNull: true },
@@ -108,6 +107,13 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
       createdAt: "created_at",
       updatedAt: "updated_at",
+      indexes: [
+        {
+          unique: true,
+          name: "cms_home_hero_singleton_key",
+          fields: ["singleton_key"],
+        },
+      ],
     }
   );
 

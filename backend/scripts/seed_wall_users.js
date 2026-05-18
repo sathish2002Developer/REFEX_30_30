@@ -3,10 +3,12 @@ const fs = require("fs");
 const path = require("path");
 const { sequelize, WallMember } = require("../models");
 const { normalizeEmail } = require("../helpers/wallMember");
+const { hashWallPassword } = require("../helpers/wallPassword");
 
 async function seed() {
   const filePath = path.join(__dirname, "../data/wallUsers.json");
-  const { users } = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  const { users } = data;
 
   await sequelize.sync({ alter: true });
 
@@ -30,17 +32,31 @@ async function seed() {
       is_active: true,
     };
 
+    const explicitPassword =
+      u.password != null && String(u.password).trim() !== ""
+        ? hashWallPassword(String(u.password).trim())
+        : null;
+
     const existing = await WallMember.findOne({ where: { email } });
     if (existing) {
-      await existing.update(payload);
+      const patch = { ...payload };
+      if (explicitPassword && !existing.password) {
+        patch.password = explicitPassword;
+      }
+      await existing.update(patch);
       updated += 1;
     } else {
-      await WallMember.create(payload);
+      await WallMember.create({
+        ...payload,
+        password: explicitPassword,
+      });
       created += 1;
     }
   }
 
-  console.log(`Wall users seeded: ${created} created, ${updated} updated, ${skipped} skipped (no email)`);
+  console.log(
+    `Wall users seeded: ${created} created, ${updated} updated, ${skipped} skipped. New users have no password until first sign-in.`
+  );
   await sequelize.close();
 }
 

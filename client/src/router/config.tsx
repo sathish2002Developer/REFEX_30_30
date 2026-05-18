@@ -4,6 +4,8 @@ import NotFound from "../pages/NotFound";
 import Home from "../pages/home/page";
 import Vision from "../pages/vision/page";
 import Wall from "../pages/wall/page";
+import WallResetPasswordPage from "../pages/wall/WallResetPasswordPage";
+import WallResetPasswordLegacyRedirect from "../pages/wall/WallResetPasswordLegacyRedirect";
 import AdminLayout from "../pages/admin/AdminLayout";
 import CmsHeroPage from "../pages/admin/CmsHeroPage";
 import VisionCmsPage from "../pages/admin/VisionCmsPage";
@@ -23,6 +25,14 @@ const routes: RouteObject[] = [
   {
     path: "/wall",
     element: <Wall />,
+  },
+  {
+    path: "/wall/reset-password",
+    element: <WallResetPasswordPage />,
+  },
+  {
+    path: "/wall/reset-password/:token",
+    element: <WallResetPasswordLegacyRedirect />,
   },
   {
     path: "/admin",

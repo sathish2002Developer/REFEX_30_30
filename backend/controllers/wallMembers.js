@@ -4,6 +4,11 @@ const { WallMember } = require("../models");
 const { responseStatus } = require("../helpers/response");
 const { mapWallMember, normalizeEmail } = require("../helpers/wallMember");
 const { isReservedCmsEmail } = require("../helpers/reservedCmsEmails");
+const {
+  hashWallPassword,
+  validateNewPassword,
+  hasWallPasswordStored,
+} = require("../helpers/wallPassword");
 
 function mapAdminWallMember(member) {
   const base = mapWallMember(member);
@@ -11,6 +16,7 @@ function mapAdminWallMember(member) {
     ...base,
     team_entity: member.team_entity,
     is_active: member.is_active,
+    has_password: hasWallPasswordStored(member.password),
     created_at: member.created_at,
     updated_at: member.updated_at,
   };
@@ -92,18 +98,30 @@ const wallMembersController = {
         return responseStatus(res, 409, "Email already exists");
       }
 
+      let passwordHash = null;
+      if (req.body.password != null && String(req.body.password).trim() !== "") {
+        const validationError = validateNewPassword(req.body.password);
+        if (validationError) {
+          return responseStatus(res, 400, validationError);
+        }
+        passwordHash = hashWallPassword(req.body.password);
+      }
+
       const member = await WallMember.create({
         name: String(name).trim(),
         designation: String(designation || "").trim(),
         team_entity: String(teamEntity || "").trim(),
         email,
         is_active: Boolean(isActive),
+        password: passwordHash,
       });
 
       return responseStatus(
         res,
         201,
-        "Wall user created",
+        passwordHash
+          ? "Wall user created with password"
+          : "Wall user created — they will set a password on first sign-in",
         mapAdminWallMember(member)
       );
     } catch (err) {
@@ -134,6 +152,12 @@ const wallMembersController = {
       }
       if (req.body.isActive !== undefined) patch.is_active = Boolean(req.body.isActive);
 
+      let clearedPassword = false;
+      if (req.body.resetPassword === true) {
+        patch.password = null;
+        clearedPassword = true;
+      }
+
       if (req.body.email !== undefined) {
         const email = normalizeEmail(req.body.email);
         if (!email) {
@@ -161,7 +185,9 @@ const wallMembersController = {
       return responseStatus(
         res,
         200,
-        "Wall user updated",
+        clearedPassword
+          ? "Password cleared — user will create a new password on next sign-in"
+          : "Wall user updated",
         mapAdminWallMember(member)
       );
     } catch (err) {

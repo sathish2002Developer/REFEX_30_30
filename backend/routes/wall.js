@@ -6,8 +6,11 @@ const { wallRequireAuth, wallOptionalAuth } = require("../middlewares/wallAuth")
 
 const router = express.Router();
 
-// Auth (email login)
+// Auth (email + password; first sign-in sets password when DB field is empty)
+router.post("/auth/check-email", wallAuthController.checkEmail);
 router.post("/auth/login", wallAuthController.login);
+router.post("/auth/forgot-password", wallAuthController.forgotPassword);
+router.patch("/auth/reset-password", wallAuthController.resetPassword);
 router.get("/auth/me", wallOptionalAuth, wallAuthController.me);
 
 // Public read (optional auth for likedByMe)

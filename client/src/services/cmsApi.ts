@@ -256,6 +256,7 @@ export interface WallMemberAdminRow {
   role: string;
   initials: string;
   is_active: boolean;
+  initialPassword?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -332,7 +333,7 @@ export async function createWallMemberAdmin(
 
 export async function updateWallMemberAdmin(
   id: number,
-  input: Partial<WallMemberFormInput>
+  input: Partial<WallMemberFormInput> & { resetPassword?: boolean }
 ): Promise<{ ok: boolean; message: string; data?: WallMemberAdminRow }> {
   return adminJsonRequest<WallMemberAdminRow>(`/wall-members/${id}`, {
     method: "PATCH",
@@ -342,6 +343,7 @@ export async function updateWallMemberAdmin(
       ...(input.designation !== undefined ? { designation: input.designation } : {}),
       ...(input.teamEntity !== undefined ? { teamEntity: input.teamEntity } : {}),
       ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+      ...(input.resetPassword ? { resetPassword: true } : {}),
     }),
   });
 }

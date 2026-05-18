@@ -65,12 +65,12 @@ export default function TypeWriter({
   return (
     <span className={className}>
       {displayText}
-      <span
+      {/* <span
         className={`inline-block w-[3px] h-[1em] ml-0.5 align-middle transition-opacity duration-75 ${
           showCursor ? "opacity-100" : "opacity-0"
         }`}
         style={{ backgroundColor: "currentColor" }}
-      />
+      /> */}
     </span>
   );
 }

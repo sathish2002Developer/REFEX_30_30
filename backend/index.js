@@ -11,6 +11,9 @@ const { prepareLoginHistoriesForMysqlSync } = require("./helpers/loginHistoriesS
 const {
   prepareInvestorMenuItemsForMysqlSync,
 } = require("./helpers/investorMenuItemsSyncFix");
+const {
+  prepareCmsSingletonTablesForMysqlSync,
+} = require("./helpers/cmsSingletonTablesSyncFix");
 const { ensureCmsAdminFromSample } = require("./helpers/cmsAdminSeed");
 const history = require("connect-history-api-fallback");
 const status = require("./helpers/response");
@@ -193,6 +196,7 @@ const PORT =  3009;
 cleanupWallTables(sequelize)
   .then(() => prepareLoginHistoriesForMysqlSync(sequelize))
   .then(() => prepareInvestorMenuItemsForMysqlSync(sequelize))
+  .then(() => prepareCmsSingletonTablesForMysqlSync(sequelize))
   .then(() => sequelize.sync({ alter: true }))
   .then(() => ensureCmsAdminFromSample())
   .then(() => {

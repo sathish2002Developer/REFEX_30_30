@@ -3,7 +3,10 @@ const { WallMember } = require("../models");
 const { responseStatus } = require("../helpers/response");
 const { mapWallMember } = require("../helpers/wallMember");
 
-const WALL_JWT_SECRET = process.env.WALL_JWT_SECRET || process.env.APP_KEY || "refex-wall-secret";
+const WALL_JWT_SECRET =
+  process.env.WALL_JWT_SECRET || process.env.APP_KEY || "refex-wall-secret";
+
+exports.WALL_JWT_SECRET = WALL_JWT_SECRET;
 
 exports.wallOptionalAuth = async (req, res, next) => {
   try {

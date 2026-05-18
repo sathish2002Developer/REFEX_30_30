@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, FormEvent } from "react";
+import { useState, useEffect, useCallback, type FormEvent } from "react";
 import {
   fetchWallMembersAdmin,
   createWallMemberAdmin,
@@ -74,7 +74,6 @@ export default function WallUsersPage() {
     setSaving(true);
     setMsg("");
     setErr("");
-
     const payload = {
       name: form.name.trim(),
       email: form.email.trim(),
@@ -92,9 +91,31 @@ export default function WallUsersPage() {
       setErr(r.message || "Save failed");
       return;
     }
-    setMsg(editing ? "User updated" : "User added");
+    setMsg(
+      editing
+        ? "User updated"
+        : "User added — they will create their password on first Wall sign-in"
+    );
     closeForm();
     await load();
+  };
+
+  const resetUserPassword = async (row: WallMemberAdminRow) => {
+    if (
+      !window.confirm(
+        `Clear password for ${row.name}? They will set a new password on next sign-in.`
+      )
+    ) {
+      return;
+    }
+    setErr("");
+    setMsg("");
+    const r = await updateWallMemberAdmin(row.id, { resetPassword: true });
+    if (!r.ok) {
+      setErr(r.message || "Reset failed");
+      return;
+    }
+    setMsg(`Password cleared for ${row.name} — first-time setup on next sign-in`);
   };
 
   const toggleActive = async (row: WallMemberAdminRow) => {
@@ -115,7 +136,7 @@ export default function WallUsersPage() {
         <div>
           <h1 className="text-xl font-semibold text-slate-100">Wall users</h1>
           <p className="text-sm text-slate-400 mt-1">
-            Leaders who can sign in to the Refex Wall with their official email (no password).
+            Leaders sign in with email and password. New users have no password until they complete first-time setup on The Wall.
           </p>
         </div>
         <button
@@ -203,6 +224,11 @@ export default function WallUsersPage() {
               />
             </div>
           </div>
+          {!editing && (
+            <p className="text-xs text-slate-500">
+              No password is stored yet. The leader will create their password on first Wall sign-in.
+            </p>
+          )}
           {editing && (
             <label className="flex items-center gap-2 text-sm text-slate-300">
               <input
@@ -289,6 +315,13 @@ export default function WallUsersPage() {
                       className="text-xs text-amber-400 hover:underline"
                     >
                       Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void resetUserPassword(row)}
+                      className="text-xs text-slate-400 hover:text-amber-300"
+                    >
+                      Clear pwd
                     </button>
                     <button
                       type="button"

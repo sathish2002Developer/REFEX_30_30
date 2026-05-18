@@ -212,13 +212,13 @@ export default function Vision() {
 
       {/* Our Vision Section — Hero with 3D effects */}
       <section
-        className="relative px-6 md:px-16 lg:px-24 overflow-hidden min-h-[600px] md:min-h-[720px] flex items-center justify-center"
+        className="relative px-6 md:px-16 lg:px-24 overflow-hidden max-md:min-h-0 max-md:pb-6 md:min-h-[720px] flex items-start md:items-center justify-center"
       >
         {/* Background image — object-top to show full image from top */}
         <img
           src={heroBg}
           alt=""
-          className="absolute w-full h-full object-cover object-top"
+          className="absolute w-full h-full object-fill md:object-cover object-top"
         />
         {/* Dark overlay for text readability */}
         <div
@@ -227,7 +227,7 @@ export default function Vision() {
         />
 
         {/* Floating particles background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none mt-5">
 
           {/* Rain Dots — slower, graceful falling with drift */}
           {cfg.hero.show_rain &&
@@ -282,7 +282,7 @@ export default function Vision() {
 
         <div className="flex flex-col items-center relative z-10">
           {/* Centered text content */}
-          <div className="max-w-4xl mx-auto text-center">
+          <div className="max-w-4xl mx-auto text-center max-md:mt-[280px] max-md:pb-2 md:mt-[100px]">
             <div className="mb-3 hero-animate-1">
               <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase">
                 {cfg.hero.eyebrow}
@@ -307,7 +307,7 @@ export default function Vision() {
               </p>
             </div>
 
-            <div className="space-y-3 hero-animate-4 max-w-2xl mx-auto">
+            <div className="space-y-2 hero-animate-4 max-w-2xl mx-auto max-md:mb-0">
               {cfg.hero.paragraphs.map((para, pi) => (
                 <p
                   key={pi}
@@ -404,9 +404,9 @@ export default function Vision() {
                       <i className={p.icon}></i>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-sans text-refex-gold/70 tracking-[0.2em] uppercase font-medium">
+                      {/* <span className="text-[10px] font-sans text-refex-gold/70 tracking-[0.2em] uppercase font-medium">
                         Pillar {p.num}
-                      </span>
+                      </span> */}
                       <h3 className="text-lg md:text-xl font-serif text-refex-text leading-tight group-hover:text-refex-gold transition-colors duration-500">
                         {p.title}
                       </h3>

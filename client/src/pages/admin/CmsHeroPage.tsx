@@ -3,10 +3,6 @@ import { saveHomeHeroCms, fetchHomeHeroConfig } from "../../services/cmsApi";
 import type { HomeHeroConfig } from "../../types/homeHeroCms";
 import { DEFAULT_HOME_HERO, mergeHomeHeroFromApi } from "../../types/homeHeroCms";
 
-function boolForm(v: boolean): string {
-  return v ? "true" : "false";
-}
-
 type HomeCmsTab = "hero" | "marquee" | "commitment";
 
 const tabBtn = (active: boolean) =>
@@ -104,21 +100,16 @@ export default function AdminCmsHeroPage() {
     fd.append("subtitle_upper", h.subtitle_upper);
     fd.append("quote_text", h.quote_text);
     fd.append("hashtags", JSON.stringify(tags));
-    fd.append("ctas", JSON.stringify(h.ctas));
-
-    fd.append("overlay_opacity", String(h.overlay_opacity));
-    fd.append("radial_glow_strength_percent", String(h.radial_glow_strength_percent));
-    fd.append("particle_canvas_opacity_percent", String(h.particle_canvas_opacity_percent));
-    fd.append("ring_rotate_seconds", String(h.ring_rotate_seconds));
-    fd.append("ring_reverse_seconds", String(h.ring_reverse_seconds));
-
-    fd.append("radial_glow_enabled", boolForm(h.radial_glow_enabled));
-    fd.append("particles_enabled", boolForm(h.particles_enabled));
-    fd.append("floating_orbs_enabled", boolForm(h.floating_orbs_enabled));
-    fd.append("rings_enabled", boolForm(h.rings_enabled));
-    fd.append("corner_decorations_enabled", boolForm(h.corner_decorations_enabled));
-    fd.append("stagger_animations_enabled", boolForm(h.stagger_animations_enabled));
-    fd.append("scroll_indicator_enabled", boolForm(h.scroll_indicator_enabled));
+    fd.append(
+      "ctas",
+      JSON.stringify(
+        h.ctas.map((cta, i) => ({
+          label: cta.label,
+          href: cta.href,
+          variant: DEFAULT_HOME_HERO.ctas[i]?.variant ?? (i === 0 ? "primary" : "outline"),
+        }))
+      )
+    );
 
     fd.append(
       "page_extras",
@@ -151,7 +142,9 @@ export default function AdminCmsHeroPage() {
     <div className="min-h-full bg-slate-950 text-slate-100 pb-16">
       <header className="border-b border-slate-800 px-8 py-5">
         <h1 className="text-lg font-semibold">Home page CMS</h1>
-        <p className="text-xs text-slate-500 mt-1">Hero, marquee strip, and commitment section</p>
+        <p className="text-xs text-slate-500 mt-1">
+          Edit text and images only — hero layout, motion, and effects use the site default design.
+        </p>
         <div className="flex flex-wrap gap-2 mt-4">
           <button type="button" className={tabBtn(tab === "hero")} onClick={() => setTab("hero")}>
             Hero
@@ -327,17 +320,6 @@ export default function AdminCmsHeroPage() {
                         className="mt-1 w-full rounded bg-slate-900 border border-slate-700 px-2 py-1.5 text-sm"
                       />
                     </label>
-                    <label className="text-xs">
-                      Style
-                      <select
-                        value={cta.variant}
-                        onChange={(e) => updateCta(i, "variant", e.target.value)}
-                        className="mt-1 block rounded bg-slate-900 border border-slate-700 px-2 py-1.5 text-sm"
-                      >
-                        <option value="primary">Primary</option>
-                        <option value="outline">Outline</option>
-                      </select>
-                    </label>
                     <button
                       type="button"
                       onClick={() => removeCta(i)}
@@ -348,92 +330,6 @@ export default function AdminCmsHeroPage() {
                   </div>
                 ))}
               </div>
-            </section>
-
-            <section className="grid sm:grid-cols-2 gap-6">
-              <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-wider sm:col-span-2">
-                Overlay & motion
-              </h2>
-              <label className="text-xs">
-                Overlay darkness (0–100)
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={h.overlay_opacity}
-                  onChange={(e) => setH({ ...h, overlay_opacity: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="text-xs">
-                Radial gold strength (0–100)
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={h.radial_glow_strength_percent}
-                  onChange={(e) =>
-                    setH({ ...h, radial_glow_strength_percent: Number(e.target.value) })
-                  }
-                  className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="text-xs">
-                Particle canvas opacity (0–100)
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={h.particle_canvas_opacity_percent}
-                  onChange={(e) =>
-                    setH({ ...h, particle_canvas_opacity_percent: Number(e.target.value) })
-                  }
-                  className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="text-xs">
-                Ring rotate duration (seconds)
-                <input
-                  type="number"
-                  min={10}
-                  max={120}
-                  value={h.ring_rotate_seconds}
-                  onChange={(e) => setH({ ...h, ring_rotate_seconds: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="text-xs">
-                Ring reverse duration (seconds)
-                <input
-                  type="number"
-                  min={10}
-                  max={120}
-                  value={h.ring_reverse_seconds}
-                  onChange={(e) => setH({ ...h, ring_reverse_seconds: Number(e.target.value) })}
-                  className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
-                />
-              </label>
-
-              {(
-                [
-                  ["radial_glow_enabled", "Radial glow"],
-                  ["particles_enabled", "Particles"],
-                  ["floating_orbs_enabled", "Floating orbs"],
-                  ["rings_enabled", "Rings"],
-                  ["corner_decorations_enabled", "Corner lines"],
-                  ["stagger_animations_enabled", "Stagger reveal"],
-                  ["scroll_indicator_enabled", "Scroll hint"],
-                ] as const
-              ).map(([key, label]) => (
-                <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={h[key]}
-                    onChange={(e) => setH({ ...h, [key]: e.target.checked })}
-                  />
-                  {label}
-                </label>
-              ))}
             </section>
           </>
         )}

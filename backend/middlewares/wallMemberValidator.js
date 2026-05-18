@@ -23,6 +23,10 @@ const createWallMemberSchema = [
     .isLength({ max: 160 })
     .withMessage("Team / entity must be at most 160 characters"),
   check("isActive").optional().isBoolean().withMessage("isActive must be a boolean"),
+  check("password")
+    .optional({ nullable: true })
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters"),
 ];
 
 const updateWallMemberSchema = [

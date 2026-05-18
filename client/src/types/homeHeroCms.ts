@@ -95,11 +95,57 @@ export const DEFAULT_HOME_HERO: HomeHeroConfig = {
   },
 };
 
+/** CMS content fields — design/visual settings always use DEFAULT_HOME_HERO on the public site. */
+const HOME_HERO_CONTENT_KEYS = [
+  "top_label",
+  "title_left",
+  "title_middle",
+  "title_right",
+  "tagline_plain",
+  "tagline_emphasis",
+  "subtitle_upper",
+  "quote_text",
+] as const;
+
+function mergeCtasFromApi(
+  fromApi: Partial<HomeHeroCta>[] | undefined
+): HomeHeroCta[] {
+  if (!Array.isArray(fromApi) || fromApi.length === 0) {
+    return DEFAULT_HOME_HERO.ctas;
+  }
+  return fromApi.slice(0, 6).map((cta, i) => ({
+    label: String(cta.label ?? DEFAULT_HOME_HERO.ctas[i]?.label ?? ""),
+    href: String(cta.href ?? DEFAULT_HOME_HERO.ctas[i]?.href ?? "/"),
+    variant: DEFAULT_HOME_HERO.ctas[i]?.variant ?? (i === 0 ? "primary" : "outline"),
+  }));
+}
+
 export function mergeHomeHeroFromApi(data: Partial<HomeHeroConfig> | null): HomeHeroConfig {
   if (!data) return DEFAULT_HOME_HERO;
+
+  const content: Partial<HomeHeroConfig> = {};
+  for (const key of HOME_HERO_CONTENT_KEYS) {
+    if (data[key] !== undefined && data[key] !== null) {
+      content[key] = String(data[key]);
+    }
+  }
+
+  const bgResolved =
+    data.background_image_resolved_url ||
+    data.background_image_url ||
+    DEFAULT_HOME_HERO.background_image_resolved_url;
+  const bgUrl = data.background_image_url || DEFAULT_HOME_HERO.background_image_url;
+
   return {
     ...DEFAULT_HOME_HERO,
-    ...data,
+    ...content,
+    hashtags:
+      Array.isArray(data.hashtags) && data.hashtags.length > 0
+        ? data.hashtags.map(String)
+        : DEFAULT_HOME_HERO.hashtags,
+    ctas: mergeCtasFromApi(data.ctas),
+    background_image_url: bgUrl,
+    background_image_resolved_url: bgResolved,
     marquee_phrases:
       Array.isArray(data.marquee_phrases) && data.marquee_phrases.length > 0
         ? data.marquee_phrases.map(String)

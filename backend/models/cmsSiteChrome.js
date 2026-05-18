@@ -14,7 +14,6 @@ module.exports = (sequelize, DataTypes) => {
       singleton_key: {
         type: DataTypes.STRING(32),
         allowNull: false,
-        unique: true,
         defaultValue: "main",
       },
       payload: {
@@ -29,6 +28,13 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
       createdAt: "created_at",
       updatedAt: "updated_at",
+      indexes: [
+        {
+          unique: true,
+          name: "cms_site_chrome_singleton_key",
+          fields: ["singleton_key"],
+        },
+      ],
     }
   );
 

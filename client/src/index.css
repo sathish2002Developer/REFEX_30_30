@@ -2,6 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .wall-login-modal__body {
+    box-sizing: border-box;
+    padding: 2rem 1.5rem 1.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .wall-login-modal__body {
+      padding: 2.25rem 2rem 2rem;
+    }
+  }
+
+  .wall-login-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .wall-login-modal__field {
+    box-sizing: border-box;
+    margin: 0 0 1rem;
+    padding: 0;
+  }
+
+  .wall-login-modal__label {
+    display: block;
+    margin: 0 0 0.375rem;
+    padding: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    color: rgb(75 85 99);
+  }
+
+  .wall-login-modal__input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: rgb(31 41 55);
+    background-color: rgb(249 250 251);
+    border: 1px solid rgb(229 231 235);
+    border-radius: 0.75rem;
+    outline: none;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .wall-login-modal__input:focus {
+    border-color: rgb(251 191 36);
+    background-color: #fff;
+  }
+
+  .wall-login-modal__input::placeholder {
+    color: rgb(156 163 175);
+  }
+}
+
 @layer utilities {
   .animate-float-slow {
     animation: floatSlow 8s ease-in-out infinite;

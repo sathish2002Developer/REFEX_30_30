@@ -24,7 +24,11 @@ interface WallAuthContextValue {
   loginOpen: boolean;
   openLogin: (afterLogin?: PendingAction) => void;
   closeLogin: () => void;
-  login: (email: string) => Promise<WallUser>;
+  login: (
+    email: string,
+    password: string,
+    confirmPassword?: string
+  ) => Promise<WallUser>;
   logout: () => void;
   requireAuth: (action: PendingAction) => boolean;
 }
@@ -54,8 +58,8 @@ export function WallAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (email: string) => {
-      const loggedIn = await wallLogin(email);
+    async (email: string, password: string, confirmPassword?: string) => {
+      const loggedIn = await wallLogin(email, password, confirmPassword);
       setUser(loggedIn);
       setLoginOpen(false);
       if (pendingAction) {

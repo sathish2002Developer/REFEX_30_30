@@ -35,12 +35,15 @@ module.exports = (sequelize, DataTypes) => {
       email: {
         type: DataTypes.STRING(120),
         allowNull: true,
-        unique: true,
       },
       is_active: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: true,
+      },
+      password: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
       },
     },
     {
@@ -49,6 +52,13 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "wall_members",
       createdAt: "created_at",
       updatedAt: "updated_at",
+      indexes: [
+        {
+          unique: true,
+          name: "wall_members_email_unique",
+          fields: ["email"],
+        },
+      ],
     }
   );
 
