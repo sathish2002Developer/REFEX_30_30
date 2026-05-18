@@ -158,7 +158,7 @@ export default function Home() {
         <img
           src={heroBg}
           alt="Refex Group Leadership"
-          className="absolute  w-full h-full object-cover md:object-contain object-top"
+          className="hidden md:block absolute w-full h-full object-cover md:object-contain object-top"
         />
 
         <div className="absolute inset-0 bg-black/40 pointer-events-none" />
