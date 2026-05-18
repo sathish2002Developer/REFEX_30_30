@@ -15,7 +15,7 @@ exports.wallOptionalAuth = async (req, res, next) => {
     const payload = jwt.verify(token, WALL_JWT_SECRET);
     const member = await WallMember.findByPk(payload.wallMemberId);
     if (member?.is_active) {
-      req.wallUser = mapWallMember(member);
+      req.wallUser = mapWallMember(member, req);
     }
     next();
   } catch {
@@ -34,7 +34,7 @@ exports.wallRequireAuth = async (req, res, next) => {
     if (!member || !member.is_active) {
       return responseStatus(res, 401, "Session expired. Please sign in again");
     }
-    req.wallUser = mapWallMember(member);
+    req.wallUser = mapWallMember(member, req);
     next();
   } catch {
     return responseStatus(res, 401, "Invalid or expired session. Please sign in again");

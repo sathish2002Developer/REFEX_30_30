@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "post_id",
         as: "post",
       });
+      WallComment.belongsTo(models.WallMember, {
+        foreignKey: "wall_member_id",
+        as: "member",
+      });
     }
   }
 
@@ -21,6 +25,14 @@ module.exports = (sequelize, DataTypes) => {
       post_id: {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
+      },
+      wall_member_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true,
+      },
+      avatar_url: {
+        type: DataTypes.STRING(512),
+        allowNull: true,
       },
       name: {
         type: DataTypes.STRING(120),

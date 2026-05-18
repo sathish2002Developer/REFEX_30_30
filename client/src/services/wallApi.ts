@@ -45,6 +45,8 @@ export interface WallComment {
   initials: string;
   body: string;
   time: string;
+  avatarUrl?: string;
+  avatar_url?: string | null;
 }
 
 export async function fetchWallPosts(params?: {

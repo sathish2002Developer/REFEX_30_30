@@ -29,6 +29,7 @@ interface WallAuthContextValue {
     password: string,
     confirmPassword?: string
   ) => Promise<WallUser>;
+  refreshUser: () => Promise<WallUser | null>;
   logout: () => void;
   requireAuth: (action: PendingAction) => boolean;
 }
@@ -59,7 +60,11 @@ export function WallAuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string, confirmPassword?: string) => {
-      const loggedIn = await wallLogin(email, password, confirmPassword);
+      await wallLogin(email, password, confirmPassword);
+      const loggedIn = (await fetchWallMe()) ?? getWallUser();
+      if (!loggedIn) {
+        throw new Error("Could not load your profile");
+      }
       setUser(loggedIn);
       setLoginOpen(false);
       if (pendingAction) {
@@ -71,6 +76,12 @@ export function WallAuthProvider({ children }: { children: ReactNode }) {
     },
     [pendingAction]
   );
+
+  const refreshUser = useCallback(async () => {
+    const fresh = await fetchWallMe();
+    if (fresh) setUser(fresh);
+    return fresh;
+  }, []);
 
   const logout = useCallback(() => {
     wallLogout();
@@ -100,6 +111,7 @@ export function WallAuthProvider({ children }: { children: ReactNode }) {
         openLogin,
         closeLogin,
         login,
+        refreshUser,
         logout,
         requireAuth,
       }}

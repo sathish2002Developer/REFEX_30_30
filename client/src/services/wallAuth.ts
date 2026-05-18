@@ -1,6 +1,19 @@
+import { getWallAvatarUrl } from "../utils/wallAvatar";
+
 const API_BASE = import.meta.env.VITE_API_URL || "/api/wall";
 const TOKEN_KEY = "wall_auth_token";
 const USER_KEY = "wall_user";
+
+/** Keep avatar_url + avatarUrl in sync for comment UI and cached sessions. */
+export function normalizeWallUser(user: WallUser): WallUser {
+  const stored = user.avatar_url ?? user.avatarUrl ?? null;
+  const resolved = getWallAvatarUrl(stored);
+  return {
+    ...user,
+    avatar_url: stored,
+    avatarUrl: resolved ?? stored ?? null,
+  };
+}
 
 export interface WallUser {
   id: number;
@@ -10,6 +23,8 @@ export interface WallUser {
   email: string;
   role: string;
   initials: string;
+  avatar_url?: string | null;
+  avatarUrl?: string | null;
 }
 
 interface ApiResponse<T> {
@@ -26,15 +41,16 @@ export function getWallUser(): WallUser | null {
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as WallUser;
+    return normalizeWallUser(JSON.parse(raw) as WallUser);
   } catch {
     return null;
   }
 }
 
 export function setWallSession(token: string, user: WallUser) {
+  const normalized = normalizeWallUser(user);
   localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  localStorage.setItem(USER_KEY, JSON.stringify(normalized));
 }
 
 export function clearWallSession() {
@@ -79,12 +95,25 @@ export async function wallLogin(
       ...(confirmPassword !== undefined ? { confirmPassword } : {}),
     }),
   });
-  const json = await parseWallResponse<{ user: WallUser; token: string }>(res);
+  const json = await parseWallResponse<{
+    user: WallUser;
+    token: string;
+    requiresPasswordSetup?: boolean;
+  }>(res);
   if (!res.ok || !json.success) {
-    throw new Error(json.message || "Login failed");
+    const err = new Error(json.message || "Login failed") as Error & {
+      requiresPasswordSetup?: boolean;
+    };
+    if (json.data && typeof json.data === "object" && "requiresPasswordSetup" in json.data) {
+      err.requiresPasswordSetup = Boolean(
+        (json.data as { requiresPasswordSetup?: boolean }).requiresPasswordSetup
+      );
+    }
+    throw err;
   }
-  setWallSession(json.data.token, json.data.user);
-  return json.data.user;
+  const user = normalizeWallUser(json.data.user);
+  setWallSession(json.data.token, user);
+  return user;
 }
 
 export interface WallForgotPasswordResult {
@@ -134,12 +163,13 @@ export async function fetchWallMe(): Promise<WallUser | null> {
     headers: { Authorization: `Bearer ${token}` },
   });
   const json = await parseWallResponse<{ user: WallUser }>(res);
-  if (!res.ok || !json.success) {
+  if (!res.ok || !json.success || !json.data?.user) {
     clearWallSession();
     return null;
   }
-  setWallSession(token, json.data.user);
-  return json.data.user;
+  const user = normalizeWallUser(json.data.user);
+  setWallSession(token, user);
+  return user;
 }
 
 export function wallAuthHeaders(): HeadersInit {

@@ -2,7 +2,22 @@ const { Op } = require("sequelize");
 const { validationResult } = require("express-validator");
 const { WallMember } = require("../models");
 const { responseStatus } = require("../helpers/response");
-const { mapWallMember, normalizeEmail } = require("../helpers/wallMember");
+const {
+  mapWallMember,
+  normalizeEmail,
+  resolveMemberAvatar,
+} = require("../helpers/wallMember");
+
+function parseBoolField(value, defaultValue = true) {
+  if (value === undefined || value === null || value === "") return defaultValue;
+  if (value === true || value === "true" || value === "1") return true;
+  if (value === false || value === "false" || value === "0") return false;
+  return Boolean(value);
+}
+
+function avatarStoragePath(filename) {
+  return `/uploads/wall/avatars/${filename}`;
+}
 const { isReservedCmsEmail } = require("../helpers/reservedCmsEmails");
 const {
   hashWallPassword,
@@ -10,13 +25,14 @@ const {
   hasWallPasswordStored,
 } = require("../helpers/wallPassword");
 
-function mapAdminWallMember(member) {
-  const base = mapWallMember(member);
+function mapAdminWallMember(member, req) {
+  const base = mapWallMember(member, req);
   return {
     ...base,
     team_entity: member.team_entity,
     is_active: member.is_active,
     has_password: hasWallPasswordStored(member.password),
+    avatar_resolved_url: resolveMemberAvatar(req, member.avatar_url),
     created_at: member.created_at,
     updated_at: member.updated_at,
   };
@@ -52,7 +68,7 @@ const wallMembersController = {
         res,
         200,
         "Wall users",
-        members.map(mapAdminWallMember)
+        members.map((m) => mapAdminWallMember(m, req))
       );
     } catch (err) {
       console.error("listWallMembers:", err);
@@ -66,7 +82,7 @@ const wallMembersController = {
       if (!member) {
         return responseStatus(res, 404, "Wall user not found");
       }
-      return responseStatus(res, 200, "Wall user", mapAdminWallMember(member));
+      return responseStatus(res, 200, "Wall user", mapAdminWallMember(member, req));
     } catch (err) {
       console.error("getWallMemberById:", err);
       return responseStatus(res, 500, "Failed to load wall user");
@@ -112,9 +128,14 @@ const wallMembersController = {
         designation: String(designation || "").trim(),
         team_entity: String(teamEntity || "").trim(),
         email,
-        is_active: Boolean(isActive),
+        is_active: parseBoolField(isActive, true),
         password: passwordHash,
       });
+
+      if (req.file) {
+        member.avatar_url = avatarStoragePath(req.file.filename);
+        await member.save();
+      }
 
       return responseStatus(
         res,
@@ -122,7 +143,7 @@ const wallMembersController = {
         passwordHash
           ? "Wall user created with password"
           : "Wall user created — they will set a password on first sign-in",
-        mapAdminWallMember(member)
+        mapAdminWallMember(member, req)
       );
     } catch (err) {
       console.error("createWallMember:", err);
@@ -150,10 +171,20 @@ const wallMembersController = {
       if (req.body.teamEntity !== undefined) {
         patch.team_entity = String(req.body.teamEntity || "").trim();
       }
-      if (req.body.isActive !== undefined) patch.is_active = Boolean(req.body.isActive);
+      if (req.body.isActive !== undefined) {
+        patch.is_active = parseBoolField(req.body.isActive, member.is_active);
+      }
+
+      if (req.body.removeAvatar === true || req.body.removeAvatar === "true") {
+        patch.avatar_url = null;
+      }
+
+      if (req.file) {
+        patch.avatar_url = avatarStoragePath(req.file.filename);
+      }
 
       let clearedPassword = false;
-      if (req.body.resetPassword === true) {
+      if (parseBoolField(req.body.resetPassword, false)) {
         patch.password = null;
         clearedPassword = true;
       }
@@ -179,6 +210,10 @@ const wallMembersController = {
         patch.email = email;
       }
 
+      if (Object.keys(patch).length === 0) {
+        return responseStatus(res, 400, "No changes to save");
+      }
+
       await member.update(patch);
       await member.reload();
 
@@ -188,7 +223,7 @@ const wallMembersController = {
         clearedPassword
           ? "Password cleared — user will create a new password on next sign-in"
           : "Wall user updated",
-        mapAdminWallMember(member)
+        mapAdminWallMember(member, req)
       );
     } catch (err) {
       console.error("updateWallMemberById:", err);

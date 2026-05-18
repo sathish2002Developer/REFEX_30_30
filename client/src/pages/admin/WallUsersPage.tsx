@@ -24,6 +24,9 @@ export default function WallUsersPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<WallMemberAdminRow | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -41,9 +44,17 @@ export default function WallUsersPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  const clearAvatarState = () => {
+    if (avatarPreview?.startsWith("blob:")) URL.revokeObjectURL(avatarPreview);
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setRemoveAvatar(false);
+  };
+
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm);
+    clearAvatarState();
     setShowForm(true);
     setMsg("");
     setErr("");
@@ -58,6 +69,8 @@ export default function WallUsersPage() {
       teamEntity: row.team_entity || row.teamEntity || "",
       isActive: row.is_active,
     });
+    clearAvatarState();
+    setAvatarPreview(row.avatar_resolved_url || row.avatarUrl || row.avatar_url || null);
     setShowForm(true);
     setMsg("");
     setErr("");
@@ -67,6 +80,7 @@ export default function WallUsersPage() {
     setShowForm(false);
     setEditing(null);
     setForm(emptyForm);
+    clearAvatarState();
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -80,11 +94,12 @@ export default function WallUsersPage() {
       designation: form.designation.trim(),
       teamEntity: form.teamEntity.trim(),
       isActive: form.isActive,
+      removeAvatar,
     };
 
     const r = editing
-      ? await updateWallMemberAdmin(editing.id, payload)
-      : await createWallMemberAdmin(payload);
+      ? await updateWallMemberAdmin(editing.id, payload, avatarFile)
+      : await createWallMemberAdmin(payload, avatarFile);
 
     setSaving(false);
     if (!r.ok) {
@@ -224,6 +239,51 @@ export default function WallUsersPage() {
               />
             </div>
           </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-2">Profile photo (avatar)</label>
+            <div className="flex flex-wrap items-center gap-4">
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt=""
+                  className="w-16 h-16 rounded-full object-cover border border-slate-600"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-500 text-xs">
+                  No photo
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    if (avatarPreview?.startsWith("blob:")) URL.revokeObjectURL(avatarPreview);
+                    setAvatarFile(file);
+                    setRemoveAvatar(false);
+                    setAvatarPreview(file ? URL.createObjectURL(file) : null);
+                  }}
+                  className="text-sm text-slate-400"
+                />
+                {avatarPreview && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (avatarPreview.startsWith("blob:")) URL.revokeObjectURL(avatarPreview);
+                      setAvatarFile(null);
+                      setAvatarPreview(null);
+                      setRemoveAvatar(true);
+                    }}
+                    className="text-xs text-red-400 hover:underline text-left"
+                  >
+                    Remove photo
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">Shown on Wall comments for this user.</p>
+          </div>
           {!editing && (
             <p className="text-xs text-slate-500">
               No password is stored yet. The leader will create their password on first Wall sign-in.
@@ -291,7 +351,20 @@ export default function WallUsersPage() {
                   className="border-t border-slate-800/80 hover:bg-slate-900/40"
                 >
                   <td className="px-4 py-3">
-                    <span className="font-medium text-slate-200">{row.name}</span>
+                    <div className="flex items-center gap-2">
+                      {row.avatar_resolved_url || row.avatarUrl ? (
+                        <img
+                          src={row.avatar_resolved_url || row.avatarUrl || ""}
+                          alt=""
+                          className="w-8 h-8 rounded-full object-cover border border-slate-700"
+                        />
+                      ) : (
+                        <span className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] text-amber-400 font-semibold">
+                          {row.initials}
+                        </span>
+                      )}
+                      <span className="font-medium text-slate-200">{row.name}</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-slate-400 hidden md:table-cell">
                     {row.role || "—"}

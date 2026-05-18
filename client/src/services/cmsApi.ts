@@ -256,6 +256,9 @@ export interface WallMemberAdminRow {
   role: string;
   initials: string;
   is_active: boolean;
+  avatar_url?: string | null;
+  avatarUrl?: string | null;
+  avatar_resolved_url?: string | null;
   initialPassword?: string;
   created_at?: string;
   updated_at?: string;
@@ -267,6 +270,7 @@ export interface WallMemberFormInput {
   designation?: string;
   teamEntity?: string;
   isActive?: boolean;
+  removeAvatar?: boolean;
 }
 
 async function adminJsonRequest<T>(
@@ -316,34 +320,68 @@ export async function fetchWallMembersAdmin(
   return r.data;
 }
 
+async function adminFormRequest<T>(
+  path: string,
+  form: FormData,
+  method: "POST" | "PATCH"
+): Promise<{ ok: boolean; message: string; data?: T }> {
+  const token = getAdminToken();
+  if (!token) {
+    return { ok: false, message: "Not signed in" };
+  }
+  try {
+    const res = await fetch(`${ADMIN_BASE}${path}`, {
+      method,
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    const json: ApiResponse<T> = await res.json().catch(() => ({
+      success: false,
+      message: "Invalid response",
+      data: null as unknown as T,
+    }));
+    return {
+      ok: res.ok && json.success,
+      message: json.message || (res.ok ? "OK" : "Request failed"),
+      data: json.data,
+    };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Network error" };
+  }
+}
+
+function appendWallMemberFields(form: FormData, input: WallMemberFormInput) {
+  form.append("name", input.name.trim());
+  form.append("email", input.email.trim());
+  form.append("designation", input.designation?.trim() ?? "");
+  form.append("teamEntity", input.teamEntity?.trim() ?? "");
+  form.append("isActive", String(input.isActive ?? true));
+  if (input.removeAvatar) form.append("removeAvatar", "true");
+}
+
 export async function createWallMemberAdmin(
-  input: WallMemberFormInput
+  input: WallMemberFormInput,
+  avatarFile?: File | null
 ): Promise<{ ok: boolean; message: string; data?: WallMemberAdminRow }> {
-  return adminJsonRequest<WallMemberAdminRow>("/wall-members", {
-    method: "POST",
-    body: JSON.stringify({
-      name: input.name,
-      email: input.email,
-      designation: input.designation ?? "",
-      teamEntity: input.teamEntity ?? "",
-      isActive: input.isActive ?? true,
-    }),
-  });
+  const form = new FormData();
+  appendWallMemberFields(form, input);
+  if (avatarFile) form.append("avatar", avatarFile);
+  return adminFormRequest<WallMemberAdminRow>("/wall-members", form, "POST");
 }
 
 export async function updateWallMemberAdmin(
   id: number,
-  input: Partial<WallMemberFormInput> & { resetPassword?: boolean }
+  input: Partial<WallMemberFormInput> & { resetPassword?: boolean },
+  avatarFile?: File | null
 ): Promise<{ ok: boolean; message: string; data?: WallMemberAdminRow }> {
-  return adminJsonRequest<WallMemberAdminRow>(`/wall-members/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({
-      ...(input.name !== undefined ? { name: input.name } : {}),
-      ...(input.email !== undefined ? { email: input.email } : {}),
-      ...(input.designation !== undefined ? { designation: input.designation } : {}),
-      ...(input.teamEntity !== undefined ? { teamEntity: input.teamEntity } : {}),
-      ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
-      ...(input.resetPassword ? { resetPassword: true } : {}),
-    }),
-  });
+  const form = new FormData();
+  if (input.name !== undefined) form.append("name", input.name.trim());
+  if (input.email !== undefined) form.append("email", input.email.trim());
+  if (input.designation !== undefined) form.append("designation", input.designation.trim());
+  if (input.teamEntity !== undefined) form.append("teamEntity", input.teamEntity.trim());
+  if (input.isActive !== undefined) form.append("isActive", String(input.isActive));
+  if (input.removeAvatar) form.append("removeAvatar", "true");
+  if (input.resetPassword) form.append("resetPassword", "true");
+  if (avatarFile) form.append("avatar", avatarFile);
+  return adminFormRequest<WallMemberAdminRow>(`/wall-members/${id}`, form, "PATCH");
 }

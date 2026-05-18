@@ -9,6 +9,9 @@ import {
   votePollOption,
 } from "../../../services/wallApi";
 import ParticipantsBar from "./ParticipantsBar";
+import UserAvatar from "./UserAvatar";
+import { resolveCommentAvatar } from "../../../utils/wallAvatar";
+import { wallMediaUrl } from "../../../utils/wallMediaUrl";
 import ReactionSummaryCluster from "./ReactionSummaryCluster";
 import ReactionsBreakdownModal from "./ReactionsBreakdownModal";
 import { useWallAuth } from "../../../context/WallAuthContext";
@@ -64,7 +67,7 @@ export default function FeedCard({
   const [loadingComments, setLoadingComments] = useState(false);
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [breakdownLoading, setBreakdownLoading] = useState(false);
-  const { requireAuth } = useWallAuth();
+  const { requireAuth, refreshUser } = useWallAuth();
 
   const reactionSum = useMemo(
     () =>
@@ -139,7 +142,10 @@ export default function FeedCard({
   const handleToggleComments = () => {
     const next = !showComments;
     setShowComments(next);
-    if (next && comments.length === 0) loadComments();
+    if (next) {
+      void refreshUser();
+      void loadComments();
+    }
   };
 
   const handleLike = async () => {
@@ -185,9 +191,9 @@ export default function FeedCard({
     if (!newComment.trim()) return;
     try {
       const result = await addWallComment(entry.id, newComment.trim());
-      setComments((prev) => [...prev, result.comment]);
       setCommentCount(result.comments);
       setNewComment("");
+      await loadComments();
     } catch {
       setCommentCount((prev) => prev + 1);
       setNewComment("");
@@ -242,9 +248,7 @@ export default function FeedCard({
 
         <div className="p-5 flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 text-xs font-sans font-semibold shrink-0">
-              {entry.initials}
-            </div>
+            <UserAvatar avatarUrl={entry} initials={entry.initials} className="w-10 h-10" />
             <div>
               <div className="text-sm font-sans text-gray-900 font-medium leading-tight">{entry.name}</div>
               <div className="text-xs font-sans text-gray-400 leading-tight">{entry.role}</div>
@@ -268,7 +272,7 @@ export default function FeedCard({
           <div className="px-5 pb-4">
             <div className="rounded-lg overflow-hidden border border-gray-200">
               <img
-                src={entry.imageUrl}
+                src={wallMediaUrl(entry.imageUrl) ?? entry.imageUrl}
                 alt="Post image"
                 className="w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-700"
                 loading="lazy"
@@ -281,7 +285,12 @@ export default function FeedCard({
           <div className="px-5 pb-4">
             {entry.sketchUrl ? (
               <div className="rounded-lg overflow-hidden border border-gray-200">
-                <img src={entry.sketchUrl} alt="Sketch" className="w-full h-auto object-cover" loading="lazy" />
+                <img
+                  src={wallMediaUrl(entry.sketchUrl) ?? entry.sketchUrl}
+                  alt="Sketch"
+                  className="w-full h-auto object-cover"
+                  loading="lazy"
+                />
               </div>
             ) : (
               <div className="w-full h-32 bg-slate-50 border border-gray-200 rounded-lg flex items-center justify-center">
@@ -458,9 +467,11 @@ export default function FeedCard({
                   <div className="space-y-3 mb-3 max-h-48 overflow-y-auto">
                     {comments.map((c) => (
                       <div key={c.id} className="flex gap-2">
-                        <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 text-[10px] font-semibold shrink-0">
-                          {c.initials}
-                        </div>
+                        <UserAvatar
+                          avatarUrl={resolveCommentAvatar(c, currentUser) ?? c}
+                          initials={c.initials}
+                          className="w-7 h-7"
+                        />
                         <div>
                           <div className="text-xs font-sans text-gray-900 font-medium">
                             {c.name} <span className="text-gray-400 font-normal">· {c.time}</span>
@@ -474,9 +485,7 @@ export default function FeedCard({
               )}
               {currentUser ? (
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 text-[10px] font-semibold">
-                  {currentUser.initials}
-                </div>
+                <UserAvatar avatarUrl={currentUser} initials={currentUser.initials} className="w-7 h-7" />
                 <input
                   type="text"
                   value={newComment}

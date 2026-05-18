@@ -282,7 +282,7 @@ export default function Vision() {
 
         <div className="flex flex-col items-center relative z-10">
           {/* Centered text content */}
-          <div className="max-w-4xl mx-auto text-center max-md:mt-[280px] max-md:pb-2 md:mt-[100px]">
+          <div className="max-w-4xl mx-auto text-center max-md:mt-[300px] max-md:pb-2 md:mt-[270px]">
             <div className="mb-3 hero-animate-1">
               <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase">
                 {cfg.hero.eyebrow}

@@ -3,6 +3,8 @@ export interface WallEntry {
   name: string;
   role: string;
   initials: string;
+  avatarUrl?: string;
+  avatar_url?: string | null;
   word: string;
   body: string;
   tag: string;
@@ -41,6 +43,8 @@ export interface WallCommentItem {
   initials: string;
   body: string;
   time: string;
+  avatarUrl?: string;
+  avatar_url?: string | null;
 }
 
 export interface PollOption {

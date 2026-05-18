@@ -6,6 +6,7 @@ const cmsWallPageController = require("../controllers/cmsWallPage");
 const cmsSiteChromeController = require("../controllers/cmsSiteChrome");
 const wallAdminActivity = require("../controllers/wallAdminActivity");
 const wallMembersController = require("../controllers/wallMembers");
+const uploadWallMember = require("../middlewares/uploadWallMember");
 const authMiddleware = require("../middlewares/auth");
 const uploadCmsHero = require("../middlewares/uploadCmsHero");
 const uploadVisionCms = require("../middlewares/uploadVisionCms");
@@ -54,11 +55,13 @@ router.get("/wall-members", wallMembersController.listWallMembers);
 router.get("/wall-members/:id", wallMembersController.getWallMemberById);
 router.post(
   "/wall-members",
+  uploadWallMember.single("avatar"),
   createWallMemberSchema,
   wallMembersController.createWallMember
 );
 router.patch(
   "/wall-members/:id",
+  uploadWallMember.single("avatar"),
   updateWallMemberSchema,
   wallMembersController.updateWallMemberById
 );

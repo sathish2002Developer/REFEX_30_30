@@ -20,7 +20,11 @@ import { fetchWallPageCms } from "../../services/cmsApi";
 import { mergeWallPageFromApi, type WallPageCms } from "../../types/wallPageCms";
 
 export default function Wall() {
-  const { user, requireAuth } = useWallAuth();
+  const { user, requireAuth, refreshUser } = useWallAuth();
+
+  useEffect(() => {
+    if (user?.id) void refreshUser();
+  }, [user?.id, refreshUser]);
   const [wallCms, setWallCms] = useState<WallPageCms>(() => mergeWallPageFromApi(null));
   const [entries, setEntries] = useState<WallEntry[]>([]);
   /** Full-page feed skeleton only before the first posts response. */

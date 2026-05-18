@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useWallAuth } from "../context/WallAuthContext";
 import { useSiteChrome } from "../context/SiteChromeContext";
+import UserAvatar from "@/pages/wall/components/UserAvatar";
 
 export default function Navbar() {
   const location = useLocation();
@@ -52,7 +53,7 @@ export default function Navbar() {
                   className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 text-xs font-semibold shrink-0"
                   title={user.role}
                 >
-                  {user.initials}
+                  <UserAvatar avatarUrl={user} initials={user.initials} className="w-10 h-10" />
                 </div>
                 <button
                   type="button"

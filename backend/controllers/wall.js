@@ -5,10 +5,14 @@ const {
   WallReaction,
   WallLike,
   WallPollVote,
+  WallMember,
   sequelize,
 } = require("../models");
 const { responseStatus } = require("../helpers/response");
-const { initialsFromName } = require("../helpers/wallMember");
+const {
+  initialsFromName,
+  resolveMemberAvatar,
+} = require("../helpers/wallMember");
 
 function authorFromRequest(req) {
   const u = req.wallUser;
@@ -19,6 +23,7 @@ function authorFromRequest(req) {
     name: u.name,
     role: u.role,
     initials: u.initials,
+    avatar_url: u.avatar_url || u.avatarUrl || null,
   };
 }
 
@@ -59,14 +64,18 @@ function aggregateReactions(reactionsList = []) {
   return Object.values(map);
 }
 
-function mapComment(row) {
+function mapComment(row, req) {
+  const plain = row.toJSON ? row.toJSON() : row;
+  const avatarUrl = resolveMemberAvatar(req, plain.avatar_url);
   return {
-    id: row.id,
-    name: row.name,
-    role: row.role,
-    initials: row.initials,
-    body: row.body,
-    time: formatTimeAgo(row.created_at),
+    id: plain.id,
+    name: plain.name,
+    role: plain.role,
+    initials: plain.initials,
+    body: plain.body,
+    time: formatTimeAgo(plain.created_at),
+    avatarUrl: avatarUrl || undefined,
+    avatar_url: plain.avatar_url || avatarUrl || undefined,
   };
 }
 
@@ -124,6 +133,87 @@ async function buildPostMeta(postIds, userId) {
   return meta;
 }
 
+function resolvePostAvatar(row, options = {}) {
+  const { avatarByMemberId, avatarByName, req } = options;
+  let stored = row.author?.avatar_url || null;
+  if (!stored && row.wall_member_id && avatarByMemberId?.get) {
+    stored = avatarByMemberId.get(row.wall_member_id) || null;
+  }
+  if (!stored && row.name && avatarByName?.get) {
+    stored = avatarByName.get(row.name.trim().toLowerCase()) || null;
+  }
+  const avatarUrl = resolveMemberAvatar(req, stored);
+  return {
+    avatar_url: stored || undefined,
+    avatarUrl: avatarUrl || undefined,
+  };
+}
+
+async function buildPostAvatarLookup(posts) {
+  const plains = posts.map((p) => (p.toJSON ? p.toJSON() : p));
+  const avatarByMemberId = new Map();
+  const avatarByName = new Map();
+
+  for (const row of plains) {
+    if (row.author?.avatar_url) {
+      if (row.wall_member_id) avatarByMemberId.set(row.wall_member_id, row.author.avatar_url);
+      avatarByName.set(row.name.trim().toLowerCase(), row.author.avatar_url);
+    }
+  }
+
+  const memberIdsNeedingLookup = [
+    ...new Set(
+      plains
+        .filter((row) => row.wall_member_id && !avatarByMemberId.has(row.wall_member_id))
+        .map((row) => row.wall_member_id)
+    ),
+  ];
+
+  const legacyNames = [
+    ...new Set(
+      plains
+        .filter((row) => !row.author?.avatar_url && row.name)
+        .map((row) => row.name.trim())
+        .filter(Boolean)
+    ),
+  ];
+
+  const { Op } = require("sequelize");
+  const lookups = [];
+
+  if (memberIdsNeedingLookup.length > 0) {
+    lookups.push(
+      WallMember.findAll({
+        where: { id: { [Op.in]: memberIdsNeedingLookup }, avatar_url: { [Op.ne]: null } },
+        attributes: ["id", "name", "avatar_url"],
+      })
+    );
+  } else {
+    lookups.push(Promise.resolve([]));
+  }
+
+  if (legacyNames.length > 0) {
+    lookups.push(
+      WallMember.findAll({
+        where: { name: { [Op.in]: legacyNames }, avatar_url: { [Op.ne]: null } },
+        attributes: ["id", "name", "avatar_url"],
+      })
+    );
+  } else {
+    lookups.push(Promise.resolve([]));
+  }
+
+  const [byIdRows, byNameRows] = await Promise.all(lookups);
+  for (const m of [...byIdRows, ...byNameRows]) {
+    if (m.avatar_url) {
+      avatarByMemberId.set(m.id, m.avatar_url);
+      avatarByName.set(m.name.trim().toLowerCase(), m.avatar_url);
+    }
+  }
+
+  return { avatarByMemberId, avatarByName };
+}
+
 function mapPost(post, options = {}) {
   const row = post.toJSON ? post.toJSON() : post;
   const pollOptions = row.pollOptions || [];
@@ -133,11 +223,14 @@ function mapPost(post, options = {}) {
   const likers = likesList.map(mapLiker);
   const currentUserId = options.currentUserId;
 
+  const avatar = resolvePostAvatar(row, options);
+
   return {
     id: row.id,
     name: row.name,
     role: row.role,
     initials: row.initials,
+    ...avatar,
     word: row.word,
     body: row.body,
     tag: row.tag,
@@ -177,7 +270,7 @@ function mapPost(post, options = {}) {
       reactionsList.length > 0 ? aggregateReactions(reactionsList) : undefined,
     commentItems:
       options.includeComments && commentsList.length > 0
-        ? commentsList.map(mapComment)
+        ? commentsList.map((c) => mapComment(c, options.req))
         : undefined,
   };
 }
@@ -207,6 +300,12 @@ const postIncludes = [
     as: "likesList",
     separate: true,
     order: [["created_at", "DESC"]],
+  },
+  {
+    model: WallMember,
+    as: "author",
+    attributes: ["id", "name", "avatar_url"],
+    required: false,
   },
 ];
 
@@ -247,12 +346,15 @@ const listPosts = async (req, res) => {
       rows.map((p) => p.id),
       userId
     );
+    const avatarLookup = await buildPostAvatarLookup(rows);
     return responseStatus(res, 200, "Posts loaded", {
       posts: rows.map((p) =>
         mapPost(p, {
+          req,
           currentUserId: userId,
           pollVotedOptionId: meta[p.id]?.pollVotedOptionId,
           myReactionEmoji: meta[p.id]?.myReactionEmoji,
+          ...avatarLookup,
         })
       ),
       total: count,
@@ -281,6 +383,7 @@ const getPost = async (req, res) => {
     return responseStatus(res, 200, "Post loaded", {
       post: mapPost(post, {
         includeComments: true,
+        req,
         currentUserId: userId,
         pollVotedOptionId: meta[post.id]?.pollVotedOptionId,
         myReactionEmoji: meta[post.id]?.myReactionEmoji,
@@ -368,7 +471,10 @@ const createPost = async (req, res) => {
 
     await transaction.commit();
     const full = await findPostById(post.id);
-    return responseStatus(res, 201, "Post created", { post: mapPost(full) });
+    const avatarLookup = await buildPostAvatarLookup([full]);
+    return responseStatus(res, 201, "Post created", {
+      post: mapPost(full, { req, ...avatarLookup }),
+    });
   } catch (err) {
     await transaction.rollback();
     console.error("createPost:", err);
@@ -389,7 +495,10 @@ const updatePost = async (req, res) => {
     await post.save();
 
     const full = await findPostById(post.id);
-    return responseStatus(res, 200, "Post updated", { post: mapPost(full) });
+    const avatarLookup = await buildPostAvatarLookup([full]);
+    return responseStatus(res, 200, "Post updated", {
+      post: mapPost(full, { req, ...avatarLookup }),
+    });
   } catch (err) {
     console.error("updatePost:", err);
     return responseStatus(res, 500, "Failed to update post");
@@ -606,14 +715,89 @@ const addReaction = async (req, res) => {
   }
 };
 
+async function commentsWithMemberAvatars(comments) {
+  const plains = comments.map((row) => (row.toJSON ? row.toJSON() : { ...row }));
+
+  const memberIds = [
+    ...new Set(plains.map((c) => c.wall_member_id).filter(Boolean)),
+  ];
+
+  const avatarByMemberId = new Map();
+  const avatarByName = new Map();
+
+  if (memberIds.length > 0) {
+    const members = await WallMember.findAll({
+      where: { id: memberIds },
+      attributes: ["id", "name", "avatar_url"],
+    });
+    for (const m of members) {
+      if (m.avatar_url) {
+        avatarByMemberId.set(m.id, m.avatar_url);
+        avatarByName.set(m.name.trim().toLowerCase(), m.avatar_url);
+      }
+    }
+  }
+
+  const legacyNames = [
+    ...new Set(
+      plains
+        .filter((c) => !c.avatar_url && !c.wall_member_id && c.name)
+        .map((c) => c.name.trim())
+        .filter(Boolean)
+    ),
+  ];
+
+  if (legacyNames.length > 0) {
+    const { Op } = require("sequelize");
+    const legacyMembers = await WallMember.findAll({
+      where: {
+        name: { [Op.in]: legacyNames },
+        avatar_url: { [Op.ne]: null },
+      },
+      attributes: ["id", "name", "avatar_url"],
+    });
+    for (const m of legacyMembers) {
+      if (m.avatar_url) {
+        avatarByName.set(m.name.trim().toLowerCase(), m.avatar_url);
+        avatarByMemberId.set(m.id, m.avatar_url);
+      }
+    }
+  }
+
+  return plains.map((plain) => {
+    const memberAvatar = plain.member?.avatar_url || null;
+    if (memberAvatar) {
+      plain.avatar_url = memberAvatar;
+      return plain;
+    }
+    if (plain.avatar_url) return plain;
+    if (plain.wall_member_id) {
+      plain.avatar_url = avatarByMemberId.get(plain.wall_member_id) || null;
+    }
+    if (!plain.avatar_url && plain.name) {
+      plain.avatar_url = avatarByName.get(plain.name.trim().toLowerCase()) || null;
+    }
+    return plain;
+  });
+}
+
 const listComments = async (req, res) => {
   try {
     const comments = await WallComment.findAll({
       where: { post_id: req.params.id },
+      include: [
+        {
+          model: WallMember,
+          as: "member",
+          attributes: ["id", "name", "avatar_url"],
+          required: false,
+        },
+      ],
       order: [["created_at", "ASC"]],
     });
+    const enriched = await commentsWithMemberAvatars(comments);
     return responseStatus(res, 200, "Comments loaded", {
-      comments: comments.map(mapComment),
+      comments: enriched.map((c) => mapComment(c, req)),
     });
   } catch (err) {
     console.error("listComments:", err);
@@ -632,8 +816,18 @@ const addComment = async (req, res) => {
     const post = await WallPost.findByPk(req.params.id);
     if (!post) return responseStatus(res, 404, "Post not found");
 
+    let avatar_url = author.avatar_url || null;
+    if (author.wall_member_id) {
+      const member = await WallMember.findByPk(author.wall_member_id, {
+        attributes: ["id", "avatar_url"],
+      });
+      avatar_url = member?.avatar_url || avatar_url || null;
+    }
+
     const comment = await WallComment.create({
       post_id: post.id,
+      wall_member_id: author.wall_member_id || null,
+      avatar_url,
       name: author.name,
       role: author.role,
       initials: author.initials,
@@ -643,8 +837,20 @@ const addComment = async (req, res) => {
     post.comments_count += 1;
     await post.save();
 
+    const saved = await WallComment.findByPk(comment.id, {
+      include: [
+        {
+          model: WallMember,
+          as: "member",
+          attributes: ["id", "name", "avatar_url"],
+          required: false,
+        },
+      ],
+    });
+    const [enriched] = await commentsWithMemberAvatars([saved]);
+
     return responseStatus(res, 201, "Comment added", {
-      comment: mapComment(comment),
+      comment: mapComment(enriched, req),
       comments: post.comments_count,
     });
   } catch (err) {

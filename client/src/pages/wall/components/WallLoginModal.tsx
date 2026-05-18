@@ -18,6 +18,7 @@ export default function WallLoginModal() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [needsSetup, setNeedsSetup] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailCheckError, setEmailCheckError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,7 @@ export default function WallLoginModal() {
       setConfirmPassword("");
       setNeedsSetup(false);
       setCheckingEmail(false);
+      setEmailCheckError(null);
       setShowPassword(false);
       setError(null);
       setForgotSuccess(null);
@@ -59,26 +61,33 @@ export default function WallLoginModal() {
     };
   }, [loginOpen, closeLogin]);
 
+  const runEmailCheck = async (trimmed: string) => {
+    setCheckingEmail(true);
+    setEmailCheckError(null);
+    try {
+      const { requiresPasswordSetup } = await wallCheckEmail(trimmed);
+      setNeedsSetup(requiresPasswordSetup);
+      if (!requiresPasswordSetup) setConfirmPassword("");
+      return requiresPasswordSetup;
+    } catch (err) {
+      setNeedsSetup(false);
+      setEmailCheckError(err instanceof Error ? err.message : "Could not verify email");
+      return false;
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+
   useEffect(() => {
     const trimmed = email.trim();
     if (!trimmed || !trimmed.includes("@")) {
       setNeedsSetup(false);
+      setEmailCheckError(null);
       return;
     }
 
     const timer = setTimeout(() => {
-      void (async () => {
-        setCheckingEmail(true);
-        try {
-          const { requiresPasswordSetup } = await wallCheckEmail(trimmed);
-          setNeedsSetup(requiresPasswordSetup);
-          if (!requiresPasswordSetup) setConfirmPassword("");
-        } catch {
-          setNeedsSetup(false);
-        } finally {
-          setCheckingEmail(false);
-        }
-      })();
+      void runEmailCheck(trimmed);
     }, 450);
 
     return () => clearTimeout(timer);
@@ -90,23 +99,52 @@ export default function WallLoginModal() {
     e.preventDefault();
     setError(null);
 
-    if (needsSetup) {
-      const validationError = validateWallPasswordClient(password);
-      if (validationError) {
-        setError(validationError);
-        return;
-      }
-      if (password !== confirmPassword) {
-        setError("Passwords do not match");
-        return;
-      }
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setError("Email is required");
+      return;
     }
 
     setSubmitting(true);
     try {
-      await login(email, password, needsSetup ? confirmPassword : undefined);
+      const requiresPasswordSetup = await runEmailCheck(trimmedEmail);
+
+      if (requiresPasswordSetup) {
+        const validationError = validateWallPasswordClient(password);
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+        if (!confirmPassword) {
+          setError("Please confirm your password");
+          return;
+        }
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
+          return;
+        }
+      }
+
+      await login(
+        trimmedEmail,
+        password,
+        requiresPasswordSetup ? confirmPassword : undefined
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not sign in");
+      const msg = err instanceof Error ? err.message : "Could not sign in";
+      setError(msg);
+      const needsSetupFlag =
+        err instanceof Error &&
+        "requiresPasswordSetup" in err &&
+        Boolean((err as Error & { requiresPasswordSetup?: boolean }).requiresPasswordSetup);
+      if (
+        needsSetupFlag ||
+        /confirm your password/i.test(msg) ||
+        /passwords do not match/i.test(msg) ||
+        /create your password|first.?time|password setup/i.test(msg)
+      ) {
+        setNeedsSetup(true);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -145,7 +183,27 @@ export default function WallLoginModal() {
     <LoginModalShell closeLogin={closeLogin} title={title} subtitle={subtitle}>
       {view === "signin" ? (
         <form onSubmit={handleSignIn} className="wall-login-modal__form m-0 p-0">
-          <EmailField email={email} setEmail={setEmail} autoFocus />
+          <EmailField
+            email={email}
+            setEmail={setEmail}
+            autoFocus
+            onBlur={() => {
+              const trimmed = email.trim();
+              if (trimmed.includes("@")) void runEmailCheck(trimmed);
+            }}
+          />
+
+          {needsSetup && (
+            <p className="m-0 mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-sans text-amber-900">
+              First-time sign-in: create a password below (8+ characters, letter and number).
+            </p>
+          )}
+
+          {emailCheckError && (
+            <p className="m-0 mb-3 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-sans text-amber-800">
+              {emailCheckError}
+            </p>
+          )}
 
           <PasswordField
             id="wall-login-password"
@@ -196,6 +254,8 @@ export default function WallLoginModal() {
           <SubmitButton
             disabled={
               submitting ||
+              checkingEmail ||
+              !!emailCheckError ||
               !email.trim() ||
               !password ||
               (needsSetup && !confirmPassword)
@@ -333,6 +393,7 @@ function EmailField(props: {
   email: string;
   setEmail: (v: string) => void;
   autoFocus?: boolean;
+  onBlur?: () => void;
 }) {
   return (
     <div className="wall-login-modal__field m-0 mb-4 p-0">
@@ -345,6 +406,7 @@ function EmailField(props: {
         autoFocus={props.autoFocus}
         value={props.email}
         onChange={(e) => props.setEmail(e.target.value)}
+        onBlur={props.onBlur}
         placeholder="you@refex.co.in"
         required
         className="wall-login-modal__input"

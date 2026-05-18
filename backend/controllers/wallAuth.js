@@ -104,7 +104,9 @@ const login = async (req, res) => {
     if (!hasWallPasswordStored(member.password)) {
       const confirmError = assertPasswordConfirmation(password, confirmPassword);
       if (confirmError) {
-        return responseStatus(res, 400, confirmError);
+        return responseStatus(res, 400, confirmError, {
+          requiresPasswordSetup: true,
+        });
       }
 
       const validationError = validateNewPassword(password);
@@ -115,7 +117,7 @@ const login = async (req, res) => {
       await member.update({ password: hashWallPassword(password) });
       await member.reload();
 
-      const user = mapWallMember(member);
+      const user = mapWallMember(member, req);
       const token = signWallToken(member);
 
       return responseStatus(res, 200, "Password created. You are signed in.", {
@@ -130,7 +132,7 @@ const login = async (req, res) => {
       return responseStatus(res, 401, "Invalid Password");
     }
 
-    const user = mapWallMember(member);
+    const user = mapWallMember(member, req);
     const token = signWallToken(member);
 
     return responseStatus(res, 200, "Signed in successfully", { user, token });
