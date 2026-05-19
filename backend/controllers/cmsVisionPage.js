@@ -3,6 +3,7 @@
 const path = require("path");
 const { CmsVisionPage } = require("../models");
 const { responseStatus } = require("../helpers/response");
+const { archiveCurrentRevision } = require("../helpers/cmsRevisionHelper");
 
 const DEFAULT_HERO_BG =
   "https://storage.readdy-site.link/project_files/04e95ea7-e673-4199-a33e-5a962ce92760/7a9ddfbd-1202-4660-af3a-eb88ce0facf1_Vision.jpg?v=175577d8715374fbeca5a1f3604f20c9";
@@ -228,6 +229,7 @@ const patchAdminVisionPage = async (req, res) => {
         leadership: { portrait_url: pickUploaded(files.leaderPortrait[0].path) },
       });
 
+    await archiveCurrentRevision("vision", req);
     row.payload = mergeIncomingPayload(row.payload || {}, incoming);
     await row.save();
 
@@ -243,4 +245,5 @@ module.exports = {
   defaultVisionPayload,
   getPublicVisionPage,
   patchAdminVisionPage,
+  serializeForResponse,
 };

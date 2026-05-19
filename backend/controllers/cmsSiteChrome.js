@@ -1,6 +1,7 @@
 const path = require("path");
 const { CmsSiteChrome } = require("../models");
 const { responseStatus } = require("../helpers/response");
+const { archiveCurrentRevision } = require("../helpers/cmsRevisionHelper");
 
 const DEFAULT_LOGO =
   "https://storage.readdy-site.link/project_files/04e95ea7-e673-4199-a33e-5a962ce92760/757136b0-4321-4d6b-81ce-1cf238944d48_Vision-3030-May-15-1.png?v=7b45fd25577a4e4e294208870680ff9f";
@@ -150,6 +151,7 @@ const patchAdminSiteChrome = async (req, res) => {
       });
     }
 
+    await archiveCurrentRevision("site-chrome", req);
     row.payload = mergePayload(row.payload || {}, incoming);
     await row.save();
 
@@ -165,4 +167,5 @@ module.exports = {
   getPublicSiteChrome,
   patchAdminSiteChrome,
   defaultPayload,
+  serializePayload,
 };

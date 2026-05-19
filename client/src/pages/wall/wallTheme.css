@@ -1,0 +1,30 @@
+.wall-themed .wall-panel {
+  background-color: var(--wall-card-bg, #ffffff);
+  border: 1px solid var(--wall-card-border, #e5e7eb);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.wall-themed .wall-panel:hover {
+  border-color: var(--wall-card-hover-border, #fde68a);
+}
+
+.wall-themed .wall-accent-text {
+  color: var(--wall-accent, #d97706);
+}
+
+.wall-themed .wall-accent-text:hover {
+  color: var(--wall-accent-dark, #b45309);
+}
+
+.wall-themed .wall-muted-text {
+  color: var(--wall-muted, #9ca3af);
+}
+
+.wall-themed .wall-body-text {
+  color: var(--wall-body, #4b5563);
+}
+
+.wall-themed .wall-btn-muted:hover {
+  color: var(--wall-accent-dark, #b45309);
+  border-color: var(--wall-card-hover-border, #fde68a);
+}

@@ -85,8 +85,8 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
 
   return (
     <div className="space-y-5 lg:w-80 shrink-0">
-      <div className="bg-white border border-gray-200 rounded-xl p-6 hover:border-amber-200 transition-all duration-500 shadow-sm">
-        <div className="text-[10px] font-sans text-gray-400 tracking-widest uppercase mb-4">
+      <div className="wall-panel rounded-xl p-6 shadow-sm">
+        <div className="text-[10px] font-sans wall-muted-text tracking-widest uppercase mb-4">
           {cms.active_leaders_title}
         </div>
         <div className="flex items-center justify-center">
@@ -98,7 +98,7 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
                 cy="40"
                 r="36"
                 fill="none"
-                stroke="#D4AF37"
+                stroke="var(--wall-progress-ring, #D4AF37)"
                 strokeWidth="4"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
@@ -107,19 +107,23 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-serif text-amber-700">{animatedCount}</span>
-              <span className="text-[10px] font-sans text-gray-400">of {totalLeaders}</span>
+              <span className="text-2xl font-serif wall-accent-text">{animatedCount}</span>
+              <span className="text-[10px] font-sans wall-muted-text">of {totalLeaders}</span>
             </div>
           </div>
         </div>
         <div className="text-center mt-3">
-          <span className="text-xs font-sans text-gray-500">{cms.active_leaders_sub}</span>
+          <span className="text-xs font-sans wall-muted-text">{cms.active_leaders_sub}</span>
         </div>
         <div className="flex items-center justify-center gap-1 mt-2 flex-wrap">
           {previewInitials.map((ini, i) => (
             <div
               key={`${ini}-${i}`}
-              className="w-6 h-6 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-[8px] text-amber-700"
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] wall-accent-text"
+              style={{
+                backgroundColor: "var(--wall-accent-light, #fffbeb)",
+                border: "1px solid var(--wall-card-hover-border, #fde68a)",
+              }}
             >
               {ini}
             </div>
@@ -130,15 +134,15 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 hover:border-amber-200 transition-all duration-500 shadow-sm">
-        <div className="text-[10px] font-sans text-gray-400 tracking-widest uppercase mb-4">
+      <div className="wall-panel rounded-xl p-6 shadow-sm">
+        <div className="text-[10px] font-sans wall-muted-text tracking-widest uppercase mb-4">
           {cms.trending_title}
         </div>
         <div className="flex flex-wrap gap-2">
           {wordCloud.map((w, i) => (
             <span
               key={`${w.word}-${i}`}
-              className={`font-sans text-amber-700 cursor-default hover:text-amber-900 transition-all duration-300 hover:scale-105 ${
+              className={`font-sans wall-accent-text cursor-default transition-all duration-300 hover:scale-105 hover:opacity-80 ${
                 w.size === 1
                   ? "text-[10px]"
                   : w.size === 2
@@ -157,14 +161,20 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 hover:border-amber-200 transition-all duration-500 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-20 h-20 bg-amber-50 rounded-full blur-2xl" />
+      <div className="wall-panel rounded-xl p-6 shadow-sm relative overflow-hidden">
+        <div
+          className="absolute top-0 right-0 w-20 h-20 rounded-full blur-2xl"
+          style={{ backgroundColor: "var(--wall-accent-light, #fffbeb)" }}
+        />
         <div className="text-[10px] font-sans text-gray-400 tracking-widest uppercase mb-3">
           {cms.daily_reflection_title}
         </div>
         <div className="relative">
-          <i className="ri-double-quotes-l text-lg text-amber-200 absolute -top-1 -left-1"></i>
-          <p className="text-sm font-serif text-gray-700 italic leading-relaxed pl-4">
+          <i
+            className="ri-double-quotes-l text-lg absolute -top-1 -left-1 wall-accent-text"
+            style={{ opacity: 0.35 }}
+          ></i>
+          <p className="text-sm font-serif wall-body-text italic leading-relaxed pl-4">
             {prompts[currentPrompt] ?? ""}
           </p>
         </div>
@@ -172,7 +182,7 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
           <button
             type="button"
             onClick={refreshPrompt}
-            className="mt-4 flex items-center gap-2 text-xs font-sans text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
+            className="mt-4 flex items-center gap-2 text-xs font-sans wall-accent-text transition-colors cursor-pointer"
           >
             <i className="ri-refresh-line"></i>
             <span>{cms.new_prompt_label}</span>
@@ -182,17 +192,23 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
 
     
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 hover:border-amber-200 transition-all duration-500 shadow-sm relative overflow-hidden">
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-50 rounded-full blur-2xl" />
-        <div className="text-[10px] font-sans text-gray-400 tracking-widest uppercase mb-4">
+      <div className="wall-panel rounded-xl p-6 shadow-sm relative overflow-hidden">
+        <div
+          className="absolute bottom-0 left-0 w-24 h-24 rounded-full blur-2xl"
+          style={{ backgroundColor: "var(--wall-accent-light, #fffbeb)" }}
+        />
+        <div className="text-[10px] font-sans wall-muted-text tracking-widest uppercase mb-4">
           {cms.vision_quote_title}
         </div>
         <div className="relative min-h-[80px]">
-          <i className="ri-double-quotes-l text-2xl text-amber-100 absolute -top-2 -left-1"></i>
-          <p className="text-sm font-serif text-gray-600 italic leading-relaxed pl-4 transition-opacity duration-700">
+          <i
+            className="ri-double-quotes-l text-2xl absolute -top-2 -left-1 wall-accent-text"
+            style={{ opacity: 0.25 }}
+          ></i>
+          <p className="text-sm font-serif wall-body-text italic leading-relaxed pl-4 transition-opacity duration-700">
             {quotes[currentQuote]?.text}
           </p>
-          <p className="text-[10px] font-sans text-amber-600 mt-3 pl-4 tracking-wide">
+          <p className="text-[10px] font-sans wall-accent-text mt-3 pl-4 tracking-wide">
             — {quotes[currentQuote]?.author}
           </p>
         </div>
@@ -204,8 +220,13 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
                 type="button"
                 onClick={() => setCurrentQuote(i)}
                 className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${
-                  i === currentQuote ? "bg-amber-600 w-4" : "bg-gray-200 hover:bg-gray-400"
+                  i === currentQuote ? "w-4" : "bg-gray-200 hover:bg-gray-400"
                 }`}
+                style={
+                  i === currentQuote
+                    ? { backgroundColor: "var(--wall-accent, #d97706)" }
+                    : undefined
+                }
               />
             ))}
           </div>

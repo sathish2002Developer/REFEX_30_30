@@ -1,3 +1,7 @@
+import { DEFAULT_WALL_THEME, mergeWallTheme, type WallThemeCms } from "../utils/wallTheme";
+
+export type { WallThemeCms };
+
 export interface WallHeroCms {
   eyebrow: string;
   typing_lines: string[];
@@ -55,6 +59,7 @@ export interface WallPageCms {
   hero: WallHeroCms;
   labels: WallFeedLabelsCms;
   sidebar: WallSidebarCms;
+  theme: WallThemeCms;
 }
 
 const DEFAULT_HERO_BG = "/images/wall-hero.svg";
@@ -143,6 +148,7 @@ export const DEFAULT_WALL_PAGE_CMS: WallPageCms = {
       { name: "Deepa M.", role: "Life Sciences", initials: "DM", posts: 7, likes: 98, streak: 3 },
     ],
   },
+  theme: DEFAULT_WALL_THEME,
 };
 
 export function mergeWallPageFromApi(data: Partial<WallPageCms> | null): WallPageCms {
@@ -162,6 +168,7 @@ export function mergeWallPageFromApi(data: Partial<WallPageCms> | null): WallPag
         base.hero.hero_image_resolved_url,
     },
     labels: { ...base.labels, ...data.labels },
+    theme: mergeWallTheme(data.theme),
     sidebar: {
       ...base.sidebar,
       ...data.sidebar,
@@ -210,5 +217,6 @@ export function wallPageCmsToPayload(w: WallPageCms): WallPageCms {
     hero,
     labels: w.labels,
     sidebar: w.sidebar,
+    theme: w.theme,
   };
 }

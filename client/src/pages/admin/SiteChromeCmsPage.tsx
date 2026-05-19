@@ -1,4 +1,8 @@
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useCallback, useRef, FormEvent } from "react";
+import CmsVersionPanel, {
+  type CmsVersionPanelHandle,
+} from "../../components/admin/CmsVersionPanel";
+import { showAdminError, showAdminSaveSuccess } from "../../utils/adminToast";
 import { fetchSiteChrome, saveSiteChromeCms } from "../../services/cmsApi";
 import { useSiteChrome } from "../../context/SiteChromeContext";
 import type { NavLinkCms, SiteChromeCms } from "../../types/siteChromeCms";
@@ -22,14 +26,22 @@ export default function SiteChromeCmsPage() {
   const [tab, setTab] = useState<ChromeTab>("navbar");
   const [c, setC] = useState<SiteChromeCms>(() => DEFAULT_SITE_CHROME);
   const [loading, setLoading] = useState(false);
-  const [savedMsg, setSavedMsg] = useState("");
+  const [versionRefreshKey, setVersionRefreshKey] = useState(0);
+  const versionPanelRef = useRef<CmsVersionPanelHandle>(null);
+
+  const reloadSiteChromeEditor = useCallback(async () => {
+    const data = await fetchSiteChrome();
+    setC(mergeSiteChromeFromApi(data));
+  }, []);
+
+  const reloadSiteChromeAfterRevert = useCallback(async () => {
+    await reloadSiteChromeEditor();
+    await reload();
+  }, [reloadSiteChromeEditor, reload]);
 
   useEffect(() => {
-    (async () => {
-      const data = await fetchSiteChrome();
-      setC(mergeSiteChromeFromApi(data));
-    })();
-  }, []);
+    reloadSiteChromeEditor();
+  }, [reloadSiteChromeEditor]);
 
   const updateNavLink = (i: number, field: keyof NavLinkCms, val: string) => {
     setC((prev) => {
@@ -61,7 +73,6 @@ export default function SiteChromeCmsPage() {
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
-    setSavedMsg("");
     setLoading(true);
     const fd = new FormData();
     fd.append("payload", JSON.stringify(siteChromeToPayload(c)));
@@ -78,10 +89,12 @@ export default function SiteChromeCmsPage() {
     setLoading(false);
     if (res.ok && res.data) {
       setC(mergeSiteChromeFromApi(res.data));
-      setSavedMsg("Saved successfully.");
+      showAdminSaveSuccess("Successfully saved.");
+      setVersionRefreshKey((k) => k + 1);
+      await versionPanelRef.current?.refresh();
       await reload();
     } else {
-      setSavedMsg(res.message || "Save failed");
+      showAdminError(res.message || "Save failed.");
     }
   };
 
@@ -108,17 +121,12 @@ export default function SiteChromeCmsPage() {
       </header>
 
       <form onSubmit={save} className="max-w-4xl mx-auto px-8 py-8 space-y-10">
-        {savedMsg && (
-          <p
-            className={`text-sm px-4 py-2 rounded-lg ${
-              savedMsg.includes("success")
-                ? "bg-emerald-900/40 text-emerald-300"
-                : "bg-red-900/30 text-red-300"
-            }`}
-          >
-            {savedMsg}
-          </p>
-        )}
+        <CmsVersionPanel
+          ref={versionPanelRef}
+          resource="site-chrome"
+          refreshKey={versionRefreshKey}
+          onReverted={reloadSiteChromeAfterRevert}
+        />
 
         <section className={`space-y-4 ${tab !== "navbar" ? "hidden" : ""}`}>
           <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">Navbar</h2>

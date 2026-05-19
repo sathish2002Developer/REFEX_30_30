@@ -6,6 +6,8 @@ const cmsWallPageController = require("../controllers/cmsWallPage");
 const cmsSiteChromeController = require("../controllers/cmsSiteChrome");
 const wallAdminActivity = require("../controllers/wallAdminActivity");
 const wallMembersController = require("../controllers/wallMembers");
+const wallMemberRevisionsController = require("../controllers/wallMemberRevisions");
+const cmsRevisionsController = require("../controllers/cmsRevisions");
 const uploadWallMember = require("../middlewares/uploadWallMember");
 const authMiddleware = require("../middlewares/auth");
 const uploadCmsHero = require("../middlewares/uploadCmsHero");
@@ -49,9 +51,31 @@ router.patch(
   cmsWallPageController.patchAdminWallPage
 );
 
+router.get("/cms/:resource/revisions", cmsRevisionsController.listCmsRevisions);
+router.get(
+  "/cms/:resource/revisions/:revisionId/changes",
+  cmsRevisionsController.getCmsRevisionChangesHandler
+);
+router.post(
+  "/cms/:resource/revisions/:revisionId/revert",
+  cmsRevisionsController.revertCmsRevision
+);
+
 router.get("/wall/activity", wallAdminActivity.listWallActivity);
 
 router.get("/wall-members", wallMembersController.listWallMembers);
+router.get(
+  "/wall-members/:id/revisions",
+  wallMemberRevisionsController.listWallMemberRevisions
+);
+router.get(
+  "/wall-members/:id/revisions/:revisionId/changes",
+  wallMemberRevisionsController.getWallMemberRevisionChangesHandler
+);
+router.post(
+  "/wall-members/:id/revisions/:revisionId/revert",
+  wallMemberRevisionsController.revertWallMemberRevision
+);
 router.get("/wall-members/:id", wallMembersController.getWallMemberById);
 router.post(
   "/wall-members",

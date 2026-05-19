@@ -18,6 +18,8 @@ import {
 import { useWallAuth } from "../../context/WallAuthContext";
 import { fetchWallPageCms } from "../../services/cmsApi";
 import { mergeWallPageFromApi, type WallPageCms } from "../../types/wallPageCms";
+import { wallThemeCssVars } from "../../utils/wallTheme";
+import "./wallTheme.css";
 
 export default function Wall() {
   const { user, requireAuth, refreshUser } = useWallAuth();
@@ -173,8 +175,20 @@ export default function Wall() {
     [requireAuth]
   );
 
+  const pageStyle = wallThemeCssVars(wallCms.theme);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className="min-h-screen wall-themed"
+      style={{
+        ...pageStyle,
+        backgroundColor: "var(--wall-page-bg)",
+        backgroundImage: "var(--wall-page-bg-image)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
       <Navbar />
 
       <WallHeader
@@ -195,20 +209,20 @@ export default function Wall() {
             <div className="mb-6">
               <CreatePost onPost={handlePost} disabled={posting} />
               {!user && (
-                <p className="mt-2 text-xs font-sans text-gray-400 text-center">
+                <p className="mt-2 text-xs font-sans wall-muted-text text-center">
                   {wallCms.labels.sign_in_hint}
                 </p>
               )}
             </div>
 
             <div className="flex items-center justify-between mb-4 gap-3">
-              <span className="text-xs font-sans text-gray-400">
+              <span className="text-xs font-sans wall-muted-text">
                 {postsBootLoading
                   ? wallCms.labels.post_count_loading
                   : `${entries.length} ${wallCms.labels.post_count_suffix}`}
               </span>
               {postsRefreshing ? (
-                <span className="text-xs font-sans text-amber-600/90 inline-flex items-center gap-1.5">
+                <span className="text-xs font-sans wall-accent-text inline-flex items-center gap-1.5 opacity-90">
                   <i className="ri-loader-4-line animate-spin"></i>
                   Updating…
                 </span>
@@ -217,8 +231,8 @@ export default function Wall() {
 
             {postsBootLoading ? (
               <div className="text-center py-16">
-                <i className="ri-loader-4-line text-3xl text-amber-500 animate-spin"></i>
-                <p className="text-sm font-sans text-gray-400 mt-3">{wallCms.labels.loading_the_wall}</p>
+                <i className="ri-loader-4-line text-3xl wall-accent-text animate-spin"></i>
+                <p className="text-sm font-sans wall-muted-text mt-3">{wallCms.labels.loading_the_wall}</p>
               </div>
             ) : (
               <>
@@ -263,7 +277,7 @@ export default function Wall() {
                 {entries.length === 0 ? (
                   <div className="text-center py-16">
                     <i className="ri-inbox-line text-3xl text-gray-300 mb-3"></i>
-                    <p className="text-sm font-sans text-gray-400">
+                    <p className="text-sm font-sans wall-muted-text">
                       {wallCms.labels.empty_state}
                     </p>
                   </div>
@@ -276,7 +290,7 @@ export default function Wall() {
                 type="button"
                 disabled={postsBootLoading || postsRefreshing}
                 onClick={() => loadPosts(true)}
-                className="px-6 py-2.5 bg-white border border-gray-200 rounded-lg text-xs font-sans text-gray-400 hover:text-amber-700 hover:border-amber-200 transition-all cursor-pointer shadow-sm disabled:opacity-55 disabled:pointer-events-none"
+                className="px-6 py-2.5 wall-panel wall-btn-muted rounded-lg text-xs font-sans wall-muted-text transition-all cursor-pointer shadow-sm disabled:opacity-55 disabled:pointer-events-none"
               >
                 {postsRefreshing ? (
                   <span className="inline-flex items-center gap-2">

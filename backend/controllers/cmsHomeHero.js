@@ -1,6 +1,7 @@
 const path = require("path");
 const { CmsHomeHero } = require("../models");
 const { responseStatus } = require("../helpers/response");
+const { archiveCurrentRevision } = require("../helpers/cmsRevisionHelper");
 
 const DEFAULT_BG =
   "https://storage.readdy-site.link/project_files/04e95ea7-e673-4199-a33e-5a962ce92760/15181ef8-7c35-4bb8-b0ba-6d5eb33b5694_Home.jpg?v=834bb40ea63c5255d57a7b7d74094acb";
@@ -144,6 +145,7 @@ const getPublicHomeHero = async (req, res) => {
 const patchAdminHomeHero = async (req, res) => {
   try {
     const row = await getOrCreateRow();
+    await archiveCurrentRevision("home-hero", req);
     const body = req.body || {};
 
     [

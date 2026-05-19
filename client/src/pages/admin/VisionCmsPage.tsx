@@ -1,4 +1,8 @@
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useCallback, useRef, FormEvent } from "react";
+import CmsVersionPanel, {
+  type CmsVersionPanelHandle,
+} from "../../components/admin/CmsVersionPanel";
+import { showAdminError, showAdminSaveSuccess } from "../../utils/adminToast";
 import {
   fetchVisionPageCms,
   saveVisionPageCms,
@@ -29,17 +33,20 @@ export default function VisionCmsPage() {
     DEFAULT_VISION_PAGE_CMS.leadership.body_paragraphs.join("\n\n")
   );
   const [loading, setLoading] = useState(false);
-  const [savedMsg, setSavedMsg] = useState("");
+  const [versionRefreshKey, setVersionRefreshKey] = useState(0);
+  const versionPanelRef = useRef<CmsVersionPanelHandle>(null);
+
+  const reloadVisionCms = useCallback(async () => {
+    const data = await fetchVisionPageCms();
+    const merged = mergeVisionPageCms(data);
+    setV(merged);
+    setHeroParas(merged.hero.paragraphs.join("\n\n"));
+    setLeadParas(merged.leadership.body_paragraphs.join("\n\n"));
+  }, []);
 
   useEffect(() => {
-    (async () => {
-      const data = await fetchVisionPageCms();
-      const merged = mergeVisionPageCms(data);
-      setV(merged);
-      setHeroParas(merged.hero.paragraphs.join("\n\n"));
-      setLeadParas(merged.leadership.body_paragraphs.join("\n\n"));
-    })();
-  }, []);
+    reloadVisionCms();
+  }, [reloadVisionCms]);
 
   const setMetric = (i: number, patch: Partial<VisionMetricCms>) => {
     setV((prev) => {
@@ -62,7 +69,6 @@ export default function VisionCmsPage() {
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
-    setSavedMsg("");
     const paragraphs = heroParas
       .split(/\n\n+/)
       .map((s) => s.trim())
@@ -77,7 +83,6 @@ export default function VisionCmsPage() {
       leadership: { ...v.leadership, body_paragraphs },
     };
 
-    setLoading(true);
     const fd = new FormData();
     fd.append("payload", JSON.stringify(visionPageCmsToPayload(payloadModel)));
 
@@ -87,16 +92,39 @@ export default function VisionCmsPage() {
     const leaderFile = (document.getElementById("vision-leader-img") as HTMLInputElement | null)?.files?.[0];
     if (leaderFile) fd.append("leaderPortrait", leaderFile);
 
-    const res = await saveVisionPageCms(fd);
-    setLoading(false);
-    if (res.ok && res.data) {
-      const merged = mergeVisionPageCms(res.data);
-      setV(merged);
-      setHeroParas(merged.hero.paragraphs.join("\n\n"));
-      setLeadParas(merged.leadership.body_paragraphs.join("\n\n"));
-      setSavedMsg("Saved successfully.");
-    } else {
-      setSavedMsg(res.message || "Save failed");
+    setLoading(true);
+    try {
+      const res = await saveVisionPageCms(fd);
+      if (!res.ok) {
+        showAdminError(res.message || "Save failed.");
+        return;
+      }
+
+      showAdminSaveSuccess(res.message || "Successfully saved.");
+
+      if (res.data) {
+        try {
+          const merged = mergeVisionPageCms(res.data);
+          setV(merged);
+          setHeroParas(merged.hero.paragraphs.join("\n\n"));
+          setLeadParas(merged.leadership.body_paragraphs.join("\n\n"));
+        } catch (mergeErr) {
+          console.error("mergeVisionPageCms after save:", mergeErr);
+          await reloadVisionCms();
+        }
+      }
+
+      setVersionRefreshKey((k) => k + 1);
+      try {
+        await versionPanelRef.current?.refresh();
+      } catch (refreshErr) {
+        console.error("version panel refresh:", refreshErr);
+      }
+    } catch (err) {
+      console.error("save vision:", err);
+      showAdminError(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -136,18 +164,13 @@ export default function VisionCmsPage() {
         </div>
       </header>
 
-      <form onSubmit={save} className="max-w-4xl mx-auto px-8 py-8 space-y-10">
-        {savedMsg && (
-          <p
-            className={`text-sm px-4 py-2 rounded-lg ${
-              savedMsg.includes("success")
-                ? "bg-emerald-900/40 text-emerald-300"
-                : "bg-red-900/30 text-red-300"
-            }`}
-          >
-            {savedMsg}
-          </p>
-        )}
+      <form noValidate onSubmit={save} className="max-w-4xl mx-auto px-8 py-8 space-y-10">
+        <CmsVersionPanel
+          ref={versionPanelRef}
+          resource="vision"
+          refreshKey={versionRefreshKey}
+          onReverted={reloadVisionCms}
+        />
 
         <section className={`space-y-4 ${tab !== "hero" ? "hidden" : ""}`}>
           <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">Hero</h2>
@@ -155,10 +178,11 @@ export default function VisionCmsPage() {
           <label className="block text-xs text-slate-400">
             Background image URL
             <input
-              type="url"
+              type="text"
               value={v.hero.background_image_url}
               onChange={(e) => setV({ ...v, hero: { ...v.hero, background_image_url: e.target.value } })}
               className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
+              placeholder="https://… or /uploads/cms/…"
             />
           </label>
           <input id="vision-hero-bg" type="file" accept="image/*" className="text-sm" />
@@ -378,12 +402,13 @@ export default function VisionCmsPage() {
           <p className="text-xs text-slate-500 break-all">Current portrait: {leaderImg}</p>
           <label className="block text-xs">Portrait URL</label>
           <input
-            type="url"
+            type="text"
             value={v.leadership.portrait_url}
             onChange={(e) =>
               setV({ ...v, leadership: { ...v.leadership, portrait_url: e.target.value } })
             }
             className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
+            placeholder="https://… or /uploads/cms/…"
           />
           <input id="vision-leader-img" type="file" accept="image/*" className="text-sm" />
           <label className="block text-xs">Portrait alt text</label>

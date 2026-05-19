@@ -1,10 +1,14 @@
-import { useState, useEffect, useCallback, type FormEvent } from "react";
+import { useState, useEffect, useCallback, useRef, type FormEvent } from "react";
 import {
   fetchWallMembersAdmin,
   createWallMemberAdmin,
   updateWallMemberAdmin,
   type WallMemberAdminRow,
 } from "../../services/cmsApi";
+import WallMemberVersionPanel, {
+  type WallMemberVersionPanelHandle,
+} from "../../components/admin/WallMemberVersionPanel";
+import { showAdminError, showAdminSaveSuccess } from "../../utils/adminToast";
 
 const emptyForm = {
   name: "",
@@ -19,7 +23,6 @@ export default function WallUsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeOnly, setActiveOnly] = useState(false);
-  const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<WallMemberAdminRow | null>(null);
@@ -28,6 +31,8 @@ export default function WallUsersPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [versionRefreshKey, setVersionRefreshKey] = useState(0);
+  const versionPanelRef = useRef<WallMemberVersionPanelHandle>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -56,7 +61,6 @@ export default function WallUsersPage() {
     setForm(emptyForm);
     clearAvatarState();
     setShowForm(true);
-    setMsg("");
     setErr("");
   };
 
@@ -72,8 +76,26 @@ export default function WallUsersPage() {
     clearAvatarState();
     setAvatarPreview(row.avatar_resolved_url || row.avatarUrl || row.avatar_url || null);
     setShowForm(true);
-    setMsg("");
     setErr("");
+  };
+
+  const reloadEditingMember = async () => {
+    if (!editing) return;
+    await load();
+    const fresh = (await fetchWallMembersAdmin(search, activeOnly)).find((r) => r.id === editing.id);
+    if (fresh) {
+      setEditing(fresh);
+      setForm({
+        name: fresh.name,
+        email: fresh.email,
+        designation: fresh.designation || "",
+        teamEntity: fresh.team_entity || fresh.teamEntity || "",
+        isActive: fresh.is_active,
+      });
+      if (!avatarFile) {
+        setAvatarPreview(fresh.avatar_resolved_url || fresh.avatarUrl || fresh.avatar_url || null);
+      }
+    }
   };
 
   const closeForm = () => {
@@ -86,7 +108,6 @@ export default function WallUsersPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setMsg("");
     setErr("");
     const payload = {
       name: form.name.trim(),
@@ -104,14 +125,19 @@ export default function WallUsersPage() {
     setSaving(false);
     if (!r.ok) {
       setErr(r.message || "Save failed");
+      showAdminError(r.message || "Save failed.");
       return;
     }
-    setMsg(
-      editing
-        ? "User updated"
-        : "User added — they will create their password on first Wall sign-in"
+    showAdminSaveSuccess(
+      editing ? "Successfully saved." : "User added successfully."
     );
-    closeForm();
+    setVersionRefreshKey((k) => k + 1);
+    await versionPanelRef.current?.refresh();
+    if (editing) {
+      await reloadEditingMember();
+    } else {
+      closeForm();
+    }
     await load();
   };
 
@@ -124,24 +150,29 @@ export default function WallUsersPage() {
       return;
     }
     setErr("");
-    setMsg("");
     const r = await updateWallMemberAdmin(row.id, { resetPassword: true });
     if (!r.ok) {
       setErr(r.message || "Reset failed");
+      showAdminError(r.message || "Reset failed.");
       return;
     }
-    setMsg(`Password cleared for ${row.name} — first-time setup on next sign-in`);
+    showAdminSaveSuccess(`Password cleared for ${row.name}.`);
+    if (editing?.id === row.id) setVersionRefreshKey((k) => k + 1);
+    await load();
   };
 
   const toggleActive = async (row: WallMemberAdminRow) => {
     setErr("");
-    setMsg("");
     const r = await updateWallMemberAdmin(row.id, { isActive: !row.is_active });
     if (!r.ok) {
       setErr(r.message || "Update failed");
+      showAdminError(r.message || "Update failed.");
       return;
     }
-    setMsg(`${row.name} ${row.is_active ? "deactivated" : "activated"}`);
+    showAdminSaveSuccess(
+      `${row.name} ${row.is_active ? "deactivated" : "activated"} successfully.`
+    );
+    if (editing?.id === row.id) setVersionRefreshKey((k) => k + 1);
     await load();
   };
 
@@ -163,11 +194,6 @@ export default function WallUsersPage() {
         </button>
       </div>
 
-      {msg && (
-        <p className="mb-4 text-sm text-emerald-400 border border-emerald-500/30 rounded-lg px-3 py-2 bg-emerald-950/30">
-          {msg}
-        </p>
-      )}
       {err && !showForm && (
         <p className="mb-4 text-sm text-red-400 border border-red-500/30 rounded-lg px-3 py-2 bg-red-950/30">
           {err}
@@ -299,6 +325,14 @@ export default function WallUsersPage() {
               />
               Active (can sign in to wall)
             </label>
+          )}
+          {editing && (
+            <WallMemberVersionPanel
+              ref={versionPanelRef}
+              memberId={editing.id}
+              refreshKey={versionRefreshKey}
+              onReverted={reloadEditingMember}
+            />
           )}
           <div className="flex gap-2">
             <button

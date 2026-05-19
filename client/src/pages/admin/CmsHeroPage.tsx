@@ -1,4 +1,8 @@
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useCallback, useRef, FormEvent } from "react";
+import CmsVersionPanel, {
+  type CmsVersionPanelHandle,
+} from "../../components/admin/CmsVersionPanel";
+import { showAdminError, showAdminSaveSuccess } from "../../utils/adminToast";
 import { saveHomeHeroCms, fetchHomeHeroConfig } from "../../services/cmsApi";
 import type { HomeHeroConfig } from "../../types/homeHeroCms";
 import { DEFAULT_HOME_HERO, mergeHomeHeroFromApi } from "../../types/homeHeroCms";
@@ -15,21 +19,24 @@ const tabBtn = (active: boolean) =>
 export default function AdminCmsHeroPage() {
   const [tab, setTab] = useState<HomeCmsTab>("hero");
   const [loading, setLoading] = useState(false);
-  const [savedMsg, setSavedMsg] = useState("");
+  const [versionRefreshKey, setVersionRefreshKey] = useState(0);
+  const versionPanelRef = useRef<CmsVersionPanelHandle>(null);
 
   const [h, setH] = useState<HomeHeroConfig>(DEFAULT_HOME_HERO);
   const [hashtagsText, setHashtagsText] = useState(DEFAULT_HOME_HERO.hashtags.join("\n"));
 
-  useEffect(() => {
-    (async () => {
-      const data = await fetchHomeHeroConfig();
-      if (data) {
-        const merged = mergeHomeHeroFromApi(data);
-        setH(merged);
-        setHashtagsText(merged.hashtags.join("\n"));
-      }
-    })();
+  const reloadHomeHero = useCallback(async () => {
+    const data = await fetchHomeHeroConfig();
+    if (data) {
+      const merged = mergeHomeHeroFromApi(data);
+      setH(merged);
+      setHashtagsText(merged.hashtags.join("\n"));
+    }
   }, []);
+
+  useEffect(() => {
+    reloadHomeHero();
+  }, [reloadHomeHero]);
 
   const updateCta = (i: number, field: "label" | "href" | "variant", val: string) => {
     setH((prev) => {
@@ -82,7 +89,6 @@ export default function AdminCmsHeroPage() {
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
-    setSavedMsg("");
     setLoading(true);
     const tags = hashtagsText
       .split(/[\n,]/)
@@ -132,9 +138,11 @@ export default function AdminCmsHeroPage() {
       const merged = mergeHomeHeroFromApi(res.data);
       setH(merged);
       setHashtagsText(merged.hashtags.join("\n"));
-      setSavedMsg("Saved successfully.");
+      showAdminSaveSuccess("Successfully saved.");
+      setVersionRefreshKey((k) => k + 1);
+      await versionPanelRef.current?.refresh();
     } else {
-      setSavedMsg(res.message || "Save failed");
+      showAdminError(res.message || "Save failed.");
     }
   };
 
@@ -167,17 +175,12 @@ export default function AdminCmsHeroPage() {
       </header>
 
       <form onSubmit={save} className="max-w-4xl mx-auto px-8 py-8 space-y-10">
-        {savedMsg && (
-          <p
-            className={`text-sm px-4 py-2 rounded-lg ${
-              savedMsg.includes("success")
-                ? "bg-emerald-900/40 text-emerald-300"
-                : "bg-red-900/30 text-red-300"
-            }`}
-          >
-            {savedMsg}
-          </p>
-        )}
+        <CmsVersionPanel
+          ref={versionPanelRef}
+          resource="home-hero"
+          refreshKey={versionRefreshKey}
+          onReverted={reloadHomeHero}
+        />
 
         {tab === "hero" && (
           <>

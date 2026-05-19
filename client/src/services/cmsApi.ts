@@ -246,6 +246,105 @@ export function adminLogout(): void {
   setAdminToken(null);
 }
 
+export type CmsResourceType = "home-hero" | "vision" | "site-chrome" | "wall";
+
+export interface CmsRevisionRow {
+  id: number;
+  resource_type: CmsResourceType;
+  version_number: number;
+  label: string;
+  created_by: string | null;
+  created_by_email: string | null;
+  created_at: string;
+}
+
+async function adminGetJson<T>(path: string): Promise<{ ok: boolean; data?: T; message: string }> {
+  const token = getAdminToken();
+  if (!token) {
+    return { ok: false, message: "Not signed in" };
+  }
+  try {
+    const res = await fetch(`${ADMIN_BASE}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const json: ApiResponse<T> = await res.json().catch(() => ({
+      success: false,
+      message: "Invalid response",
+      data: null as unknown as T,
+    }));
+    return {
+      ok: res.ok && json.success,
+      message: json.message || "",
+      data: json.data,
+    };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Network error" };
+  }
+}
+
+export interface CmsRevisionsList {
+  revisions: CmsRevisionRow[];
+  latest_version_number: number;
+}
+
+export async function fetchCmsRevisions(
+  resource: CmsResourceType,
+  limit = 50
+): Promise<CmsRevisionsList> {
+  const r = await adminGetJson<{
+    revisions: CmsRevisionRow[];
+    latest_version_number?: number;
+  }>(`/cms/${encodeURIComponent(resource)}/revisions?limit=${limit}`);
+  if (!r.ok) {
+    console.warn("[fetchCmsRevisions]", resource, r.message);
+    return { revisions: [], latest_version_number: 0 };
+  }
+  const list = r.data?.revisions;
+  const revisions = Array.isArray(list) ? list : [];
+  const latest_version_number =
+    typeof r.data?.latest_version_number === "number"
+      ? r.data.latest_version_number
+      : revisions[0]?.version_number ?? 0;
+  return { revisions, latest_version_number };
+}
+
+export async function revertCmsRevision<T = unknown>(
+  resource: CmsResourceType,
+  revisionId: number
+): Promise<{ ok: boolean; message: string; data?: T }> {
+  return adminJsonRequest<T>(`/cms/${resource}/revisions/${revisionId}/revert`, {
+    method: "POST",
+  });
+}
+
+export interface RevisionChangeRow {
+  field: string;
+  from: string;
+  to: string;
+}
+
+export interface RevisionChangesDetail {
+  revision: {
+    id: number;
+    version_number: number;
+    label: string;
+    created_at: string;
+  };
+  changes: RevisionChangeRow[];
+  summary: string;
+}
+
+export async function fetchCmsRevisionChanges(
+  resource: CmsResourceType,
+  revisionId: number
+): Promise<RevisionChangesDetail | null> {
+  const r = await adminGetJson<RevisionChangesDetail>(
+    `/cms/${encodeURIComponent(resource)}/revisions/${revisionId}/changes`
+  );
+  if (!r.ok || !r.data) return null;
+  return r.data;
+}
+
 export interface WallMemberAdminRow {
   id: number;
   name: string;
@@ -367,6 +466,63 @@ export async function createWallMemberAdmin(
   appendWallMemberFields(form, input);
   if (avatarFile) form.append("avatar", avatarFile);
   return adminFormRequest<WallMemberAdminRow>("/wall-members", form, "POST");
+}
+
+export interface WallMemberRevisionRow {
+  id: number;
+  wall_member_id: number;
+  version_number: number;
+  label: string;
+  created_by: string | null;
+  created_by_email: string | null;
+  created_at: string;
+}
+
+export interface WallMemberRevisionsList {
+  revisions: WallMemberRevisionRow[];
+  latest_version_number: number;
+}
+
+export async function fetchWallMemberRevisions(
+  memberId: number,
+  limit = 50
+): Promise<WallMemberRevisionsList> {
+  const r = await adminGetJson<{
+    revisions: WallMemberRevisionRow[];
+    latest_version_number?: number;
+  }>(`/wall-members/${memberId}/revisions?limit=${limit}`);
+  if (!r.ok) {
+    console.warn("[fetchWallMemberRevisions]", memberId, r.message);
+    return { revisions: [], latest_version_number: 0 };
+  }
+  const list = r.data?.revisions;
+  const revisions = Array.isArray(list) ? list : [];
+  const latest_version_number =
+    typeof r.data?.latest_version_number === "number"
+      ? r.data.latest_version_number
+      : revisions[0]?.version_number ?? 0;
+  return { revisions, latest_version_number };
+}
+
+export async function revertWallMemberRevision(
+  memberId: number,
+  revisionId: number
+): Promise<{ ok: boolean; message: string; data?: WallMemberAdminRow }> {
+  return adminJsonRequest<WallMemberAdminRow>(
+    `/wall-members/${memberId}/revisions/${revisionId}/revert`,
+    { method: "POST" }
+  );
+}
+
+export async function fetchWallMemberRevisionChanges(
+  memberId: number,
+  revisionId: number
+): Promise<RevisionChangesDetail | null> {
+  const r = await adminGetJson<RevisionChangesDetail>(
+    `/wall-members/${memberId}/revisions/${revisionId}/changes`
+  );
+  if (!r.ok || !r.data) return null;
+  return r.data;
 }
 
 export async function updateWallMemberAdmin(

@@ -24,6 +24,7 @@ const {
   validateNewPassword,
   hasWallPasswordStored,
 } = require("../helpers/wallPassword");
+const { archiveWallMemberRevision } = require("../helpers/wallMemberRevisionHelper");
 
 function mapAdminWallMember(member, req) {
   const base = mapWallMember(member, req);
@@ -214,6 +215,13 @@ const wallMembersController = {
         return responseStatus(res, 400, "No changes to save");
       }
 
+      const archiveLabel = clearedPassword
+        ? "Before password cleared"
+        : patch.is_active !== undefined && Object.keys(patch).length === 1
+          ? `Before ${patch.is_active ? "activation" : "deactivation"}`
+          : undefined;
+
+      await archiveWallMemberRevision(member, req, archiveLabel);
       await member.update(patch);
       await member.reload();
 
@@ -233,3 +241,4 @@ const wallMembersController = {
 };
 
 module.exports = wallMembersController;
+module.exports.mapAdminWallMember = mapAdminWallMember;

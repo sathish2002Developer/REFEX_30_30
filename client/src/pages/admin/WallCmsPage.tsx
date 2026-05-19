@@ -1,4 +1,8 @@
-import { useState, useEffect, useCallback, Fragment, FormEvent } from "react";
+import { useState, useEffect, useCallback, useRef, Fragment, FormEvent } from "react";
+import CmsVersionPanel, {
+  type CmsVersionPanelHandle,
+} from "../../components/admin/CmsVersionPanel";
+import { showAdminError, showAdminSaveSuccess } from "../../utils/adminToast";
 import {
   fetchWallAdminActivity,
   fetchWallPageCms,
@@ -18,8 +22,10 @@ import type {
   WallWordItemCms,
 } from "../../types/wallPageCms";
 import { mergeWallPageFromApi, wallPageCmsToPayload, DEFAULT_WALL_PAGE_CMS } from "../../types/wallPageCms";
+import type { WallThemeCms } from "../../utils/wallTheme";
+import { WallThemeFields } from "./wallCmsThemeFields";
 
-type WallTab = "hero" | "feed" | "sidebar" | "activity";
+type WallTab = "hero" | "feed" | "sidebar" | "theme" | "activity";
 
 type ActivityDetailRow =
   | { status: "loading" }
@@ -51,7 +57,8 @@ export default function WallCmsPage() {
     () => DEFAULT_WALL_PAGE_CMS.sidebar.leader_preview_initials.join(", ")
   );
   const [loading, setLoading] = useState(false);
-  const [savedMsg, setSavedMsg] = useState("");
+  const [versionRefreshKey, setVersionRefreshKey] = useState(0);
+  const versionPanelRef = useRef<CmsVersionPanelHandle>(null);
   const [activity, setActivity] = useState<WallAdminActivityRow[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
   const [expandedPostId, setExpandedPostId] = useState<number | null>(null);
@@ -95,16 +102,18 @@ export default function WallCmsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      const data = await fetchWallPageCms();
-      const merged = mergeWallPageFromApi(data);
-      setW(merged);
-      setTypingLinesText(merged.hero.typing_lines.join("\n"));
-      setDailyPromptsText(merged.sidebar.daily_prompts.join("\n"));
-      setLeaderInitialsText(merged.sidebar.leader_preview_initials.join(", "));
-    })();
+  const reloadWallCms = useCallback(async () => {
+    const data = await fetchWallPageCms();
+    const merged = mergeWallPageFromApi(data);
+    setW(merged);
+    setTypingLinesText(merged.hero.typing_lines.join("\n"));
+    setDailyPromptsText(merged.sidebar.daily_prompts.join("\n"));
+    setLeaderInitialsText(merged.sidebar.leader_preview_initials.join(", "));
   }, []);
+
+  useEffect(() => {
+    reloadWallCms();
+  }, [reloadWallCms]);
 
   useEffect(() => {
     if (tab !== "activity") return;
@@ -196,6 +205,10 @@ export default function WallCmsPage() {
     }));
   };
 
+  const setTheme = (patch: Partial<WallThemeCms>) => {
+    setW((prev) => ({ ...prev, theme: { ...prev.theme, ...patch } }));
+  };
+
   const removeQuote = (i: number) => {
     setW((prev) => ({
       ...prev,
@@ -208,7 +221,6 @@ export default function WallCmsPage() {
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
-    setSavedMsg("");
     const typing_lines = typingLinesText
       .split(/\n+/)
       .map((s) => s.trim())
@@ -242,9 +254,11 @@ export default function WallCmsPage() {
       setTypingLinesText(merged.hero.typing_lines.join("\n"));
       setDailyPromptsText(merged.sidebar.daily_prompts.join("\n"));
       setLeaderInitialsText(merged.sidebar.leader_preview_initials.join(", "));
-      setSavedMsg("Saved successfully.");
+      showAdminSaveSuccess("Successfully saved.");
+      setVersionRefreshKey((k) => k + 1);
+      await versionPanelRef.current?.refresh();
     } else {
-      setSavedMsg(res.message || "Save failed");
+      showAdminError(res.message || "Save failed.");
     }
   };
 
@@ -268,6 +282,9 @@ export default function WallCmsPage() {
           </button>
           <button type="button" className={tabBtn(tab === "sidebar")} onClick={() => setTab("sidebar")}>
             Sidebar
+          </button>
+          <button type="button" className={tabBtn(tab === "theme")} onClick={() => setTab("theme")}>
+            Colors & background
           </button>
           <button
             type="button"
@@ -471,17 +488,12 @@ export default function WallCmsPage() {
         </div>
       ) : (
         <form onSubmit={save} className="max-w-4xl mx-auto px-8 py-8 space-y-10">
-        {savedMsg && (
-          <p
-            className={`text-sm px-4 py-2 rounded-lg ${
-              savedMsg.includes("success")
-                ? "bg-emerald-900/40 text-emerald-300"
-                : "bg-red-900/30 text-red-300"
-            }`}
-          >
-            {savedMsg}
-          </p>
-        )}
+        <CmsVersionPanel
+          ref={versionPanelRef}
+          resource="wall"
+          refreshKey={versionRefreshKey}
+          onReverted={reloadWallCms}
+        />
 
         <section className={`space-y-4 ${tab !== "hero" ? "hidden" : ""}`}>
           <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">Hero</h2>
@@ -772,6 +784,18 @@ export default function WallCmsPage() {
               ))}
             </div>
           </div>
+        </section>
+
+        <section className={`space-y-4 ${tab !== "theme" ? "hidden" : ""}`}>
+          <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">
+            Colors &amp; background
+          </h2>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Controls page background, hero area, accent gold, text colors, and sidebar cards on{" "}
+            <code className="text-amber-500/90">/wall</code>. Hero image is still edited under the Hero
+            tab.
+          </p>
+          <WallThemeFields theme={w.theme} onChange={setTheme} />
         </section>
 
         <button

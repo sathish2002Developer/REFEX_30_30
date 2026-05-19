@@ -32,20 +32,21 @@ export default function WallHeader({
     setHeroImgBroken(false);
   }, [imgSrc]);
 
-  const today = new Date().toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
   const lines =
     hero.typing_lines?.length > 0
       ? hero.typing_lines
       : ["Where every voice shapes the vision"];
 
   return (
-    <section className="relative overflow-hidden border-b border-gray-200/80 min-h-[420px] md:min-h-[480px] lg:min-h-[520px]">
-      <div className="absolute inset-0 z-0 bg-[#fafaf9]" aria-hidden>
+    <section
+      className="relative overflow-hidden border-b min-h-[420px] md:min-h-[480px] lg:min-h-[520px]"
+      style={{ borderColor: "var(--wall-card-border, #e5e7eb)" }}
+    >
+      <div
+        className="absolute inset-0 z-0"
+        style={{ backgroundColor: "var(--wall-hero-bg, #fafaf9)" }}
+        aria-hidden
+      >
         {!heroImgBroken ? (
           <img
             src={imgSrc}
@@ -57,18 +58,26 @@ export default function WallHeader({
           />
         ) : (
           <div
-            className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-amber-50 to-sky-100"
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(to bottom right, var(--wall-hero-fallback-start, #ecfdf5), var(--wall-hero-fallback-mid, #fffbeb), var(--wall-hero-fallback-end, #e0f2fe))`,
+            }}
             aria-hidden
           />
         )}
       </div>
 
       <div
-        className="absolute inset-0 pointer-events-none z-[1] bg-gradient-to-b from-white/50 via-white/28 to-transparent"
+        className="absolute inset-0 pointer-events-none z-[1]"
+        style={{ background: "linear-gradient(to bottom, var(--wall-hero-overlay), transparent)" }}
         aria-hidden
       />
       <div
-        className="absolute inset-0 pointer-events-none z-[1] bg-gradient-to-r from-white/45 via-transparent to-white/20"
+        className="absolute inset-0 pointer-events-none z-[1]"
+        style={{
+          background:
+            "linear-gradient(to right, var(--wall-hero-overlay-side), transparent, var(--wall-hero-overlay-side))",
+        }}
         aria-hidden
       />
 
@@ -97,23 +106,42 @@ export default function WallHeader({
                 <div className="h-5 rounded-md bg-gray-200/85 w-[70%]" />
               </div>
               <div className="h-3 w-36 rounded-md bg-gray-300/75 animate-pulse" />
-              <p className="text-xs font-sans text-gray-500 mt-10 flex items-center gap-2">
-                <i className="ri-loader-4-line animate-spin text-amber-600" aria-hidden />
+              <p
+                className="text-xs font-sans mt-10 flex items-center gap-2"
+                style={{ color: "var(--wall-muted, #6b7280)" }}
+              >
+                <i
+                  className="ri-loader-4-line animate-spin"
+                  style={{ color: "var(--wall-accent, #d97706)" }}
+                  aria-hidden
+                />
                 {cmsLoadingHint?.trim() || "Loading hero content…"}
               </p>
             </div>
           ) : (
             <>
               <div className="mb-5 animate-fade-in">
-                <span className="inline-flex items-center gap-3 text-sky-800/90 text-xs font-sans tracking-[0.4em] uppercase font-medium">
-                  <span className="w-8 h-px bg-sky-400/60" />
+                <span
+                  className="inline-flex items-center gap-3 text-xs font-sans tracking-[0.4em] uppercase font-medium"
+                  style={{ color: "var(--wall-eyebrow, #075985)" }}
+                >
+                  <span
+                    className="w-8 h-px"
+                    style={{ backgroundColor: "color-mix(in srgb, var(--wall-eyebrow) 60%, transparent)" }}
+                  />
                   {hero.eyebrow}
-                  <span className="w-8 h-px bg-sky-400/60" />
+                  <span
+                    className="w-8 h-px"
+                    style={{ backgroundColor: "color-mix(in srgb, var(--wall-eyebrow) 60%, transparent)" }}
+                  />
                 </span>
               </div>
 
               <div className="min-h-[3.5rem] md:min-h-[4.5rem] mb-4">
-                <h1 className="text-2xl md:text-3xl lg:text-4xl font-serif text-gray-900 leading-tight drop-shadow-sm">
+                <h1
+                  className="text-2xl md:text-3xl lg:text-4xl font-serif leading-tight drop-shadow-sm"
+                  style={{ color: "var(--wall-headline, #111827)" }}
+                >
                   <TypeWriter
                     lines={lines}
                     typingSpeed={50}
@@ -123,16 +151,19 @@ export default function WallHeader({
                 </h1>
               </div>
 
-              <div className="mb-5 w-16 h-px bg-gradient-to-r from-sky-400/80 via-sky-500/50 to-transparent" />
+              <div
+                className="mb-5 w-16 h-px"
+                style={{
+                  background: `linear-gradient(to right, color-mix(in srgb, var(--wall-eyebrow) 80%, transparent), transparent)`,
+                }}
+              />
 
               <p
-                className="text-base md:text-lg font-sans text-gray-600 max-w-xl mb-4 leading-relaxed animate-slide-up whitespace-pre-line drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]"
-                style={{ animationDelay: "0.2s" }}
+                className="text-base md:text-lg font-sans max-w-xl mb-4 leading-relaxed animate-slide-up whitespace-pre-line drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]"
+                style={{ animationDelay: "0.2s", color: "var(--wall-body, #4b5563)" }}
               >
                 {hero.intro}
               </p>
-
-            
             </>
           )}
         </div>

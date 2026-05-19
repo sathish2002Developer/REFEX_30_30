@@ -2,6 +2,7 @@ import { useState, FormEvent, useEffect } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { authLogin, adminLogout, getAdminToken } from "../../services/cmsApi";
 import { CMS_ADMIN_SAMPLE } from "../../config/adminSample";
+import AdminToastHost from "../../components/admin/AdminToastHost";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `block rounded-lg px-3 py-2 text-sm transition-colors ${
@@ -89,6 +90,7 @@ export default function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100">
+      <AdminToastHost />
       <aside className="w-56 shrink-0 border-r border-slate-800 flex flex-col">
         <div className="p-4 border-b border-slate-800">
           <p className="text-[10px] uppercase tracking-wider text-slate-500">Content</p>

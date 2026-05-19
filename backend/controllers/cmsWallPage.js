@@ -1,6 +1,7 @@
 const path = require("path");
 const { CmsWallPage } = require("../models");
 const { responseStatus } = require("../helpers/response");
+const { archiveCurrentRevision } = require("../helpers/cmsRevisionHelper");
 
 /** Same-origin path only — browser loads from SPA host (dev proxy) instead of rewriting to API hostname. */
 const DEFAULT_HERO_BG = "/images/wall-hero.svg";
@@ -117,7 +118,72 @@ function defaultPayload() {
         { name: "Deepa M.", role: "Life Sciences", initials: "DM", posts: 7, likes: 98, streak: 3 },
       ],
     },
+    theme: {
+      page_background: "#f9fafb",
+      page_background_image_url: "",
+      hero_background: "#fafaf9",
+      hero_fallback_start: "#ecfdf5",
+      hero_fallback_mid: "#fffbeb",
+      hero_fallback_end: "#e0f2fe",
+      hero_overlay_opacity_percent: 50,
+      accent: "#d97706",
+      accent_dark: "#b45309",
+      accent_light: "#fffbeb",
+      eyebrow: "#075985",
+      headline: "#111827",
+      body_text: "#4b5563",
+      muted_text: "#9ca3af",
+      card_background: "#ffffff",
+      card_border: "#e5e7eb",
+      card_hover_border: "#fde68a",
+      progress_ring: "#d4af37",
+    },
   };
+}
+
+function normalizeThemeColor(raw, fallback) {
+  const s = typeof raw === "string" ? raw.trim() : "";
+  if (!s) return fallback;
+  if (/^#[0-9A-Fa-f]{3,8}$/.test(s)) return s;
+  if (/^(rgb|hsl)a?\(/i.test(s)) return s;
+  return fallback;
+}
+
+function mergeTheme(defTheme, incomingTheme) {
+  const base = { ...defTheme };
+  if (!incomingTheme || typeof incomingTheme !== "object") return base;
+  const out = { ...base };
+  const colorKeys = [
+    "page_background",
+    "hero_background",
+    "hero_fallback_start",
+    "hero_fallback_mid",
+    "hero_fallback_end",
+    "accent",
+    "accent_dark",
+    "accent_light",
+    "eyebrow",
+    "headline",
+    "body_text",
+    "muted_text",
+    "card_background",
+    "card_border",
+    "card_hover_border",
+    "progress_ring",
+  ];
+  for (const k of colorKeys) {
+    if (incomingTheme[k] !== undefined) {
+      out[k] = normalizeThemeColor(incomingTheme[k], base[k]);
+    }
+  }
+  if (incomingTheme.page_background_image_url !== undefined) {
+    out.page_background_image_url = String(incomingTheme.page_background_image_url || "").trim();
+  }
+  if (incomingTheme.hero_overlay_opacity_percent !== undefined) {
+    const n = parseInt(incomingTheme.hero_overlay_opacity_percent, 10);
+    out.hero_overlay_opacity_percent = Math.min(100, Math.max(0, Number.isNaN(n) ? 50 : n));
+  }
+  return out;
 }
 
 function clampSize(n) {
@@ -186,6 +252,8 @@ function mergePayload(dbPayload, incoming) {
     next.sidebar.leader_preview_initials = def.sidebar.leader_preview_initials;
   }
 
+  next.theme = mergeTheme(def.theme, incoming?.theme || next.theme);
+
   return next;
 }
 
@@ -203,6 +271,7 @@ function serializePayload(payload, _req) {
     },
     labels: { ...def.labels, ...(p.labels || {}) },
     sidebar: p.sidebar,
+    theme: mergeTheme(def.theme, p.theme),
   };
 }
 
@@ -255,6 +324,7 @@ const patchAdminWallPage = async (req, res) => {
       });
     }
 
+    await archiveCurrentRevision("wall", req);
     row.payload = mergePayload(row.payload || {}, incoming);
     await row.save();
 
@@ -270,4 +340,5 @@ module.exports = {
   getPublicWallPage,
   patchAdminWallPage,
   defaultPayload,
+  serializePayload,
 };

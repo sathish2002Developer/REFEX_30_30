@@ -14,6 +14,9 @@ const {
 const {
   prepareCmsSingletonTablesForMysqlSync,
 } = require("./helpers/cmsSingletonTablesSyncFix");
+const {
+  prepareCmsRevisionsForMysqlSync,
+} = require("./helpers/cmsRevisionsSyncFix");
 const { ensureCmsAdminFromSample } = require("./helpers/cmsAdminSeed");
 const history = require("connect-history-api-fallback");
 const status = require("./helpers/response");
@@ -197,6 +200,7 @@ cleanupWallTables(sequelize)
   .then(() => prepareLoginHistoriesForMysqlSync(sequelize))
   .then(() => prepareInvestorMenuItemsForMysqlSync(sequelize))
   .then(() => prepareCmsSingletonTablesForMysqlSync(sequelize))
+  .then(() => prepareCmsRevisionsForMysqlSync(sequelize))
   .then(() => sequelize.sync({ alter: true }))
   .then(() => ensureCmsAdminFromSample())
   .then(() => {
