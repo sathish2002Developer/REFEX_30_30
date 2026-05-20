@@ -1,5 +1,18 @@
 import { useState, useEffect } from "react";
-import type { WallSidebarCms, WallWordItemCms } from "../../../types/wallPageCms";
+import type {
+  WallContributorRowCms,
+  WallSidebarCms,
+  WallWordItemCms,
+} from "../../../types/wallPageCms";
+
+function leaderNameForInitials(
+  initials: string,
+  contributors: WallContributorRowCms[]
+): string {
+  const key = initials.trim().toUpperCase();
+  const match = contributors.find((c) => c.initials.trim().toUpperCase() === key);
+  return match?.name?.trim() || initials;
+}
 
 function liveTrendToCloudShapes(
   rows: { word: string; count: number }[]
@@ -34,6 +47,7 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
   const [currentQuote, setCurrentQuote] = useState(0);
   const [currentPrompt, setCurrentPrompt] = useState(0);
   const [animatedCount, setAnimatedCount] = useState(0);
+  const [leadersHover, setLeadersHover] = useState(false);
 
   const prompts = cms.daily_prompts.length ? cms.daily_prompts : [""];
   const quotes = cms.vision_quotes.length ? cms.vision_quotes : [{ text: "", author: "" }];
@@ -73,6 +87,14 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
     return () => clearInterval(quoteTimer);
   }, [quotes.length]);
 
+  useEffect(() => {
+    if (prompts.length <= 1) return;
+    const promptTimer = setInterval(() => {
+      setCurrentPrompt((prev) => (prev + 1) % prompts.length);
+    }, 30_000);
+    return () => clearInterval(promptTimer);
+  }, [prompts.length]);
+
   const refreshPrompt = () => {
     if (prompts.length <= 1) return;
     setCurrentPrompt((prev) => (prev + 1) % prompts.length);
@@ -82,10 +104,18 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
   const circumference = 2 * Math.PI * 36;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
   const plusExtra = Math.max(0, animatedCount - previewInitials.length);
+  const previewLeaders = previewInitials.map((ini) => ({
+    initials: ini,
+    name: leaderNameForInitials(ini, contributors),
+  }));
 
   return (
     <div className="space-y-5 lg:w-80 shrink-0">
-      <div className="wall-panel rounded-xl p-6 shadow-sm">
+      <div
+        className="wall-panel rounded-xl p-6 shadow-sm"
+        onMouseEnter={() => setLeadersHover(true)}
+        onMouseLeave={() => setLeadersHover(false)}
+      >
         <div className="text-[10px] font-sans wall-muted-text tracking-widest uppercase mb-4">
           {cms.active_leaders_title}
         </div>
@@ -108,24 +138,43 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-2xl font-serif wall-accent-text">{animatedCount}</span>
-              <span className="text-[10px] font-sans wall-muted-text">of {totalLeaders}</span>
+              {/* <span className="text-[10px] font-sans wall-muted-text">of {totalLeaders}</span> */}
             </div>
           </div>
         </div>
-        <div className="text-center mt-3">
-          <span className="text-xs font-sans wall-muted-text">{cms.active_leaders_sub}</span>
+        <div className="text-center mt-3 min-h-[2.5rem] px-1 flex items-center justify-center">
+          <p
+            className={`text-xs font-sans leading-relaxed transition-colors duration-200 ${
+              leadersHover && previewLeaders.length > 0 ? "wall-body-text" : "wall-muted-text"
+            }`}
+          >
+            {leadersHover && previewLeaders.length > 0
+              ? previewLeaders.map((l) => l.name).join(" · ")
+              : cms.active_leaders_sub}
+          </p>
         </div>
-        <div className="flex items-center justify-center gap-1 mt-2 flex-wrap">
-          {previewInitials.map((ini, i) => (
+        <div className="flex items-center justify-center gap-1.5 mt-2 flex-wrap">
+          {previewLeaders.map((leader, i) => (
             <div
-              key={`${ini}-${i}`}
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] wall-accent-text"
-              style={{
-                backgroundColor: "var(--wall-accent-light, #fffbeb)",
-                border: "1px solid var(--wall-card-hover-border, #fde68a)",
-              }}
+              key={`${leader.initials}-${i}`}
+              className="relative group"
+              title={leader.name}
             >
-              {ini}
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-semibold wall-accent-text cursor-default ring-2 ring-transparent group-hover:ring-amber-400/50 transition-all"
+                style={{
+                  backgroundColor: "var(--wall-accent-light, #fffbeb)",
+                  border: "1px solid var(--wall-card-hover-border, #fde68a)",
+                }}
+              >
+                {leader.initials}
+              </div>
+              <span
+                role="tooltip"
+                className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-[10px] font-sans font-medium whitespace-nowrap rounded-md bg-gray-900 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-30 shadow-md"
+              >
+                {leader.name}
+              </span>
             </div>
           ))}
           <div className="w-6 h-6 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-[8px] text-gray-500">
@@ -178,7 +227,7 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
             {prompts[currentPrompt] ?? ""}
           </p>
         </div>
-        {prompts.length > 1 && (
+        {/* {prompts.length > 1 && (
           <button
             type="button"
             onClick={refreshPrompt}
@@ -187,7 +236,7 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
             <i className="ri-refresh-line"></i>
             <span>{cms.new_prompt_label}</span>
           </button>
-        )}
+        )} */}
       </div>
 
     
@@ -208,11 +257,11 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
           <p className="text-sm font-serif wall-body-text italic leading-relaxed pl-4 transition-opacity duration-700">
             {quotes[currentQuote]?.text}
           </p>
-          <p className="text-[10px] font-sans wall-accent-text mt-3 pl-4 tracking-wide">
+          {/* <p className="text-[10px] font-sans wall-accent-text mt-3 pl-4 tracking-wide">
             — {quotes[currentQuote]?.author}
-          </p>
+          </p> */}
         </div>
-        {quotes.length > 1 && (
+        {/* {quotes.length > 1 && (
           <div className="flex justify-center gap-1.5 mt-4">
             {quotes.map((_, i) => (
               <button
@@ -230,7 +279,7 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
               />
             ))}
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

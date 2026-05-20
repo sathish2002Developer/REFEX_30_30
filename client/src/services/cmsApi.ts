@@ -9,7 +9,7 @@ interface ApiResponse<T> {
   data: T;
 }
 
-const CMS_BASE = "/api/cms";
+const CMS_BASE = "https://30by30.refex.group/api/cms";
 const ADMIN_BASE = "/api/admin";
 
 export async function fetchHomeHeroConfig(): Promise<HomeHeroConfig | null> {

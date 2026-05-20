@@ -74,6 +74,11 @@ export default function Vision() {
   const dashboardMetrics = cfg.metrics;
   const heroBg = cfg.hero.background_image_resolved_url || cfg.hero.background_image_url;
   const leaderPortrait = cfg.leadership.portrait_resolved_url || cfg.leadership.portrait_url;
+  /** Cap dark overlay so the hero photo stays visible (CMS 0–100 → max ~18% black). */
+  const heroOverlayOpacity = Math.min(
+    0.18,
+    Math.max(0, cfg.hero.overlay_opacity_percent / 100)
+  );
 
   const gridRef = useRef<HTMLDivElement>(null);
   const metricsSectionRef = useRef<HTMLDivElement>(null);
@@ -218,12 +223,12 @@ export default function Vision() {
         <img
           src={heroBg}
           alt=""
-          className="absolute w-full h-full object-fill md:object-cover object-top"
+          className="absolute inset-0 w-full h-full object-cover object-top"
         />
-        {/* Dark overlay for text readability */}
+        {/* Light overlay — keeps text readable without hiding the photo */}
         <div
           className="absolute inset-0 pointer-events-none bg-black"
-          style={{ opacity: Math.min(1, Math.max(0, cfg.hero.overlay_opacity_percent / 100)) }}
+          style={{ opacity: heroOverlayOpacity }}
         />
 
         {/* Floating particles background */}
@@ -282,16 +287,16 @@ export default function Vision() {
 
         <div className="flex flex-col items-center relative z-10">
           {/* Centered text content */}
-          <div className="max-w-4xl mx-auto text-center max-md:mt-[300px] max-md:pb-2 md:mt-[270px]">
+          <div className="max-w-4xl mx-auto text-center max-md:mt-[180px] max-md:pb-2 md:mt-[150px]">
             <div className="mb-3 hero-animate-1">
               <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase">
                 {cfg.hero.eyebrow}
               </span>
             </div>
 
-            <h2 className="text-2xl md:text-4xl font-serif text-refex-text mb-5 leading-tight hero-animate-2">
+            <h2 className="text-2xl md:text-4xl font-sans  mb-5 text-white hero-animate-2">
               {cfg.hero.headline_before}
-              <em className="text-refex-gold relative inline-block">
+              <em className="text-refex-gold relative inline-block not-italic">
                 {cfg.hero.headline_emphasis}
                 <span
                   className="absolute -inset-x-2 -bottom-1 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent"
@@ -302,7 +307,7 @@ export default function Vision() {
             </h2>
 
             <div className="mb-5 hero-animate-3 max-w-2xl mx-auto">
-              <p className="text-base font-serif italic text-refex-text/90 leading-relaxed">
+              <p className="text-base font-sans  text-gray-200 leading-relaxed">
                 {cfg.hero.pull_quote}
               </p>
             </div>
@@ -311,7 +316,7 @@ export default function Vision() {
               {cfg.hero.paragraphs.map((para, pi) => (
                 <p
                   key={pi}
-                  className="text-sm font-sans text-refex-text-muted leading-relaxed"
+                  className="text-sm font-sans text-gray-200"
                 >
                   {para}
                 </p>
@@ -374,7 +379,7 @@ export default function Vision() {
             <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase inline-block mb-3">
               {cfg.pillars_section.eyebrow}
             </span>
-            <h2 className="text-2xl md:text-3xl font-serif text-refex-text mb-3 leading-tight">
+            <h2 className="text-2xl md:text-3xl font-sans text-refex-text mb-3 leading-tight">
               {cfg.pillars_section.headline}
             </h2>
             <p className="text-sm font-sans text-refex-text-muted max-w-lg mx-auto">
@@ -407,7 +412,7 @@ export default function Vision() {
                       {/* <span className="text-[10px] font-sans text-refex-gold/70 tracking-[0.2em] uppercase font-medium">
                         Pillar {p.num}
                       </span> */}
-                      <h3 className="text-lg md:text-xl font-serif text-refex-text leading-tight group-hover:text-refex-gold transition-colors duration-500">
+                      <h3 className="text-lg md:text-xl font-sans text-refex-text leading-tight group-hover:text-refex-gold transition-colors duration-500">
                         {p.title}
                       </h3>
                     </div>
@@ -466,7 +471,7 @@ export default function Vision() {
               >
                 &ldquo;
               </div>
-              <p className="text-xl md:text-2xl font-serif text-refex-text mb-4 leading-tight">
+              <p className="text-xl md:text-2xl font-sans text-refex-text mb-4 leading-tight">
                 {cfg.leadership.headline_line1}
                 <br />
                 <strong className="text-refex-gold">{cfg.leadership.headline_emphasis_line2}</strong>

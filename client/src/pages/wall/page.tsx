@@ -178,141 +178,144 @@ export default function Wall() {
   const pageStyle = wallThemeCssVars(wallCms.theme);
 
   return (
-    <div
-      className="min-h-screen wall-themed"
-      style={{
-        ...pageStyle,
-        backgroundColor: "var(--wall-page-bg)",
-        backgroundImage: "var(--wall-page-bg-image)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-      }}
-    >
-      <Navbar />
+   <>
+     <Navbar />
 
-      <WallHeader
-        hero={wallCms.hero}
-        cmsLoading={wallCmsLoading}
-        cmsLoadingHint={wallCms.labels.loading_the_wall}
-      />
+<div
+  className="min-h-screen wall-themed"
+  style={{
+    ...pageStyle,
+    backgroundColor: "var(--wall-page-bg)",
+    backgroundImage: "var(--wall-page-bg-image)",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundAttachment: "fixed",
+  }}
+>
 
-      <section className="px-4 md:px-8 lg:px-16 xl:px-24 py-8">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
-          <div className="flex-1 min-w-0">
-            {error && (
-              <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-sans">
-                {error}
-              </div>
-            )}
+  <WallHeader
+    hero={wallCms.hero}
+    cmsLoading={wallCmsLoading}
+    cmsLoadingHint={wallCms.labels.loading_the_wall}
+  />
 
-            <div className="mb-6">
-              <CreatePost onPost={handlePost} disabled={posting} />
-              {!user && (
-                <p className="mt-2 text-xs font-sans wall-muted-text text-center">
-                  {wallCms.labels.sign_in_hint}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between mb-4 gap-3">
-              <span className="text-xs font-sans wall-muted-text">
-                {postsBootLoading
-                  ? wallCms.labels.post_count_loading
-                  : `${entries.length} ${wallCms.labels.post_count_suffix}`}
-              </span>
-              {postsRefreshing ? (
-                <span className="text-xs font-sans wall-accent-text inline-flex items-center gap-1.5 opacity-90">
-                  <i className="ri-loader-4-line animate-spin"></i>
-                  Updating…
-                </span>
-              ) : null}
-            </div>
-
-            {postsBootLoading ? (
-              <div className="text-center py-16">
-                <i className="ri-loader-4-line text-3xl wall-accent-text animate-spin"></i>
-                <p className="text-sm font-sans wall-muted-text mt-3">{wallCms.labels.loading_the_wall}</p>
-              </div>
-            ) : (
-              <>
-                <div
-                  className={`flex flex-col gap-5 transition-opacity duration-200 ${
-                    postsRefreshing ? "opacity-[0.88] pointer-events-none" : ""
-                  }`}
-                  aria-busy={postsRefreshing}
-                >
-                  {entries.map((entry, index) => (
-                    <div
-                      key={entry.id}
-                      className="animate-slide-up"
-                      style={{ animationDelay: `${index * 0.1}s`, animationFillMode: "both" }}
-                    >
-                      <FeedCard
-                        entry={entry}
-                        currentUser={user}
-                        onLike={handleLike}
-                        onBookmark={handleBookmark}
-                        onPollUpdate={(id, options, pollVotedOptionId) =>
-                          setEntries((prev) =>
-                            prev.map((e) =>
-                              e.id === id ? { ...e, pollOptions: options, pollVotedOptionId } : e
-                            )
-                          )
-                        }
-                        onReactionUpdate={(id, likes, likers, reactions, myReactionEmoji) =>
-                          setEntries((prev) =>
-                            prev.map((e) =>
-                              e.id === id
-                                ? { ...e, likes, likers, reactions, myReactionEmoji }
-                                : e
-                            )
-                          )
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {entries.length === 0 ? (
-                  <div className="text-center py-16">
-                    <i className="ri-inbox-line text-3xl text-gray-300 mb-3"></i>
-                    <p className="text-sm font-sans wall-muted-text">
-                      {wallCms.labels.empty_state}
-                    </p>
-                  </div>
-                ) : null}
-              </>
-            )}
-
-            <div className="text-center mt-8">
-              <button
-                type="button"
-                disabled={postsBootLoading || postsRefreshing}
-                onClick={() => loadPosts(true)}
-                className="px-6 py-2.5 wall-panel wall-btn-muted rounded-lg text-xs font-sans wall-muted-text transition-all cursor-pointer shadow-sm disabled:opacity-55 disabled:pointer-events-none"
-              >
-                {postsRefreshing ? (
-                  <span className="inline-flex items-center gap-2">
-                    <i className="ri-loader-4-line animate-spin"></i>
-                    {wallCms.labels.refresh_posts}
-                  </span>
-                ) : (
-                  wallCms.labels.refresh_posts
-                )}
-              </button>
-            </div>
+  <section className="px-4 md:px-8 lg:px-16 xl:px-24 py-8">
+    <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
+      <div className="flex-1 min-w-0">
+        {error && (
+          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-sans">
+            {error}
           </div>
+        )}
 
-          <RightSidebar
-            cms={wallCms.sidebar}
-            activeCount={entries.length + 35}
-            liveWordTrend={liveWordTrend.length ? liveWordTrend : null}
-          />
+        <div className="mb-6">
+          <CreatePost onPost={handlePost} disabled={posting} />
+          {!user && (
+            <p className="mt-2 text-xs font-sans wall-muted-text text-center">
+              {wallCms.labels.sign_in_hint}
+            </p>
+          )}
         </div>
-      </section>
 
-      <Footer />
+        <div className="flex items-center justify-between mb-4 gap-3">
+          <span className="text-xs font-sans wall-muted-text">
+            {postsBootLoading
+              ? wallCms.labels.post_count_loading
+              : `${entries.length} ${wallCms.labels.post_count_suffix}`}
+          </span>
+          {postsRefreshing ? (
+            <span className="text-xs font-sans wall-accent-text inline-flex items-center gap-1.5 opacity-90">
+              <i className="ri-loader-4-line animate-spin"></i>
+              Updating…
+            </span>
+          ) : null}
+        </div>
+
+        {postsBootLoading ? (
+          <div className="text-center py-16">
+            <i className="ri-loader-4-line text-3xl wall-accent-text animate-spin"></i>
+            <p className="text-sm font-sans wall-muted-text mt-3">{wallCms.labels.loading_the_wall}</p>
+          </div>
+        ) : (
+          <>
+            <div
+              className={`flex flex-col gap-5 transition-opacity duration-200 ${
+                postsRefreshing ? "opacity-[0.88] pointer-events-none" : ""
+              }`}
+              aria-busy={postsRefreshing}
+            >
+              {entries.map((entry, index) => (
+                <div
+                  key={entry.id}
+                  className="animate-slide-up"
+                  style={{ animationDelay: `${index * 0.1}s`, animationFillMode: "both" }}
+                >
+                  <FeedCard
+                    entry={entry}
+                    currentUser={user}
+                    onLike={handleLike}
+                    onBookmark={handleBookmark}
+                    onPollUpdate={(id, options, pollVotedOptionId) =>
+                      setEntries((prev) =>
+                        prev.map((e) =>
+                          e.id === id ? { ...e, pollOptions: options, pollVotedOptionId } : e
+                        )
+                      )
+                    }
+                    onReactionUpdate={(id, likes, likers, reactions, myReactionEmoji) =>
+                      setEntries((prev) =>
+                        prev.map((e) =>
+                          e.id === id
+                            ? { ...e, likes, likers, reactions, myReactionEmoji }
+                            : e
+                        )
+                      )
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+
+            {entries.length === 0 ? (
+              <div className="text-center py-16">
+                <i className="ri-inbox-line text-3xl text-gray-300 mb-3"></i>
+                <p className="text-sm font-sans wall-muted-text">
+                  {wallCms.labels.empty_state}
+                </p>
+              </div>
+            ) : null}
+          </>
+        )}
+
+        <div className="text-center mt-8">
+          <button
+            type="button"
+            disabled={postsBootLoading || postsRefreshing}
+            onClick={() => loadPosts(true)}
+            className="px-6 py-2.5 wall-panel wall-btn-muted rounded-lg text-xs font-sans wall-muted-text transition-all cursor-pointer shadow-sm disabled:opacity-55 disabled:pointer-events-none"
+          >
+            {postsRefreshing ? (
+              <span className="inline-flex items-center gap-2">
+                <i className="ri-loader-4-line animate-spin"></i>
+                {wallCms.labels.refresh_posts}
+              </span>
+            ) : (
+              wallCms.labels.refresh_posts
+            )}
+          </button>
+        </div>
+      </div>
+
+      <RightSidebar
+        cms={wallCms.sidebar}
+        activeCount={entries.length + 35}
+        liveWordTrend={liveWordTrend.length ? liveWordTrend : null}
+      />
     </div>
+  </section>
+
+  <Footer />
+</div>
+   </>
   );
 }

@@ -11,6 +11,7 @@ import {
   type HomeHeroCta,
 } from "../../types/homeHeroCms";
 import fallbackHeroImg from "../../mocks/Home.jpg";
+import heroImg from "../../../public/images/globel.png";
 
 function ParticleField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -158,7 +159,7 @@ export default function Home() {
         <img
           src={heroBg}
           alt="Refex Group Leadership"
-          className="hidden md:block absolute w-full h-full object-cover md:object-contain object-top"
+          className="hidden md:block absolute w-full h-full object-cover md:object-cover object-top"
         />
 
         <div className="absolute inset-0 bg-black/40 pointer-events-none" />
@@ -203,15 +204,22 @@ export default function Home() {
           </div>
 
           <div className={`mb-3 ${reveal("animate-stagger-2")}`}>
-            <div className="flex items-center justify-center gap-0 leading-none font-serif">
+            <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3 leading-none font-serif">
               <span
                 className="text-[3.5rem] sm:text-[5rem] md:text-[7rem] lg:text-[9rem] font-bold tracking-tighter leading-none pb-1 animate-shimmer-text"
                 style={{ padding: "8px" }}
               >
                 {hero.title_left}
               </span>
-              <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-400 italic font-light mx-1 md:mx-2 -translate-y-1 md:-translate-y-3">
-                {hero.title_middle}
+              <span className="flex shrink-0 items-center justify-center self-center mx-0.5 sm:mx-1 md:mx-2">
+                <span className="relative flex h-11 w-11 sm:h-14 sm:w-14 md:h-[4.5rem] md:w-[4.5rem] lg:h-20 lg:w-20 items-center justify-center rounded-full border border-amber-400/35 bg-black/25 shadow-[0_0_24px_rgba(212,175,55,0.15)]">
+                  <img
+                    src={heroImg}
+                    alt=""
+                    className="h-[88%] w-[88%] rounded-full object-contain animate-ring-rotate"
+                    style={{ animationDuration: "14s" }}
+                  />
+                </span>
               </span>
               <span
                 className="text-[3.5rem] sm:text-[5rem] md:text-[7rem] lg:text-[9rem] font-bold tracking-tighter leading-none pb-1 animate-shimmer-text"
@@ -227,29 +235,32 @@ export default function Home() {
           </div>
 
           <div className={`mb-2 ${reveal("animate-stagger-4")}`}>
-            <p className="text-lg md:text-xl lg:text-2xl font-serif text-white font-light tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+            <p className="text-sm md:text-base lg:text-lg font-sans text-white font-light tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
               {hero.tagline_plain}{" "}
               <em className="text-amber-300 not-italic font-normal">{hero.tagline_emphasis}</em>
             </p>
           </div>
 
           <div className={`mb-3 ${reveal("animate-stagger-5")}`}>
+             
             <p className="text-xs md:text-sm font-sans text-gray-300 tracking-[0.15em] uppercase drop-shadow-[0_1px_4px_rgba(0,0,0,0.4)]">
               {hero.subtitle_upper}
             </p>
           </div>
 
-          <div className={`max-w-lg mx-auto mb-5 ${reveal("animate-stagger-6")}`}>
-            <div className="relative px-5 py-3 border border-amber-400/40 bg-black/30 backdrop-blur-sm rounded-sm">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <span className="text-amber-400 text-xl font-serif">&ldquo;</span>
-              </div>
-              <p className="text-sm md:text-base font-serif italic text-gray-200 leading-relaxed">
-                {hero.quote_text}
-              </p>
-            </div>
-          </div>
+          <div className={`max-w-xl mx-auto mb-5 ${reveal("animate-stagger-6")}`}>
+  <div className="relative px-5 py-2 border border-amber-400/40 bg-black/30 backdrop-blur-sm rounded-sm">
+    
+    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <span className="text-amber-400 text-xl font-sans">&ldquo;</span>
+    </div>
 
+    <p className="text-sm md:text-base font-serif italic  text-gray-200 leading-relaxed whitespace-nowrap text-center">
+      {hero.quote_text}
+    </p>
+
+  </div>
+</div>
           <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 mb-3 ${reveal("animate-stagger-7")}`}>
             {hero.ctas.map((item, idx) => (
               <HeroCtaLink key={`${item.href}-${idx}`} cta={item} />
@@ -269,7 +280,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div
+          {/* <div
             className={`mt-5 md:mt-7 flex flex-col items-center gap-1.5 pointer-events-none ${
               heroLoaded ? "animate-hero-reveal opacity-0" : "opacity-0"
             }`}
@@ -281,7 +292,7 @@ export default function Home() {
             <div className="w-px h-7 bg-amber-400/50 relative overflow-hidden rounded-full">
               <div className="absolute top-0 left-0 w-full h-2.5 bg-gradient-to-b from-amber-300 to-transparent animate-bounce" />
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -312,21 +323,22 @@ export default function Home() {
           <ScrollReveal>
             <div className="flex items-center justify-center gap-4 mb-3">
               <span className="w-8 h-px bg-gradient-to-r from-transparent to-amber-400/40" />
-              <span className="text-amber-600 text-xs font-sans tracking-[0.3em] uppercase">
+              <span className="text-amber-600 text-xs tracking-[0.3em] uppercase">
                 {cta.eyebrow}
               </span>
               <span className="w-8 h-px bg-gradient-to-l from-transparent to-amber-400/40" />
             </div>
           </ScrollReveal>
+          
           <ScrollReveal delay={100}>
-            <h2 className="text-2xl md:text-4xl font-serif text-gray-900 mb-3 leading-tight">
+            <h2 className="text-2xl md:text-3xl font-semibold  font-sans text-gray-900 mb-3 leading-tight">
               {cta.title_plain}
-              <em className="text-gradient-gold">{cta.title_emphasis}</em>
+              <em className="text-gradient-gold not-italic ">{cta.title_emphasis}</em>
               {cta.title_after}
             </h2>
           </ScrollReveal>
           <ScrollReveal delay={200}>
-            <p className="text-sm font-sans text-gray-500 max-w-2xl mx-auto mb-6 leading-relaxed">
+            <p className="text-sm font-sans  text-gray-500 max-w-2xl mx-auto mb-6 leading-relaxed">
               {cta.body}
             </p>
           </ScrollReveal>
