@@ -36,7 +36,7 @@ function defaultVisionPayload() {
   return {
     hero: {
       background_image_url: DEFAULT_HERO_BG,
-      background_video_url: "/images/Vision.mp4",
+      background_video_url: "/vision/Vision.mp4",
       overlay_opacity_percent: 0,
       watermark_text: "30 By 30",
       eyebrow: "Our Vision",

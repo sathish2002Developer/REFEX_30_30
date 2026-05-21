@@ -1,3 +1,7 @@
+/** Hero background video in `client/public/vision/` (fallback: `public/images/`). */
+export const VISION_HERO_VIDEO_STATIC = "/vision/Vision.mp4";
+export const VISION_HERO_VIDEO_FALLBACK = "/images/Vision.mp4";
+
 export interface VisionHeroCms {
   background_image_url: string;
   background_image_resolved_url?: string;
@@ -85,7 +89,7 @@ export const DEFAULT_VISION_PAGE_CMS: VisionPageCms = {
   hero: {
     background_image_url:
       "https://storage.readdy-site.link/project_files/04e95ea7-e673-4199-a33e-5a962ce92760/7a9ddfbd-1202-4660-af3a-eb88ce0facf1_Vision.jpg?v=175577d8715374fbeca5a1f3604f20c9",
-    background_video_url: "/images/Vision.mp4",
+    background_video_url: VISION_HERO_VIDEO_STATIC,
     overlay_opacity_percent: 0,
     watermark_text: "30 By 30",
     eyebrow: "Our Vision",
@@ -198,9 +202,11 @@ export function mergeVisionPageCms(api: VisionPageCms | null): VisionPageCms {
     base.leadership as unknown as Record<string, unknown>,
     (api.leadership || {}) as Record<string, unknown>
   ) as unknown as VisionLeadershipCms;
+  const videoUrl = (hero.background_video_url || "").trim();
   return {
     hero: {
       ...hero,
+      background_video_url: videoUrl || VISION_HERO_VIDEO_STATIC,
       background_image_resolved_url:
         api.hero?.background_image_resolved_url ||
         hero.background_image_resolved_url ||

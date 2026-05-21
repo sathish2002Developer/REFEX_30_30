@@ -2,7 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { fetchVisionPageCms } from "../../services/cmsApi";
-import { mergeVisionPageCms } from "../../types/visionCms";
+import {
+  mergeVisionPageCms,
+  VISION_HERO_VIDEO_FALLBACK,
+  VISION_HERO_VIDEO_STATIC,
+} from "../../types/visionCms";
 
 // Floating gold particle
 function FloatingParticle({ delay, size, left, top, duration }: {
@@ -65,25 +69,27 @@ function AnimatedMetric({ value, isVisible, duration = 1500 }: {
 
 export default function Vision() {
   const [cfg, setCfg] = useState(() => mergeVisionPageCms(null));
+  const [heroVideoSrc, setHeroVideoSrc] = useState(VISION_HERO_VIDEO_STATIC);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     fetchVisionPageCms().then((d) => setCfg(mergeVisionPageCms(d)));
   }, []);
 
+  useEffect(() => {
+    setHeroVideoSrc(VISION_HERO_VIDEO_STATIC);
+  }, []);
+
+  useEffect(() => {
+    const el = heroVideoRef.current;
+    if (!el) return;
+    el.load();
+    el.play().catch(() => {});
+  }, [heroVideoSrc]);
+
   const pillars = cfg.pillars_section.pillars;
   const dashboardMetrics = cfg.metrics;
-  const heroBg = cfg.hero.background_image_resolved_url || cfg.hero.background_image_url;
-  const heroVideoRaw = (cfg.hero.background_video_url || "").trim();
-  const heroVideo =
-    heroVideoRaw.startsWith("/")
-      ? heroVideoRaw
-      : cfg.hero.background_video_resolved_url || heroVideoRaw;
-  const heroHasVideo = Boolean(heroVideo);
   const leaderPortrait = cfg.leadership.portrait_resolved_url || cfg.leadership.portrait_url;
-  /** Dark overlay only for image hero (video plays with no overlay). */
-  const heroOverlayOpacity = heroHasVideo
-    ? 0
-    : Math.min(0.18, Math.max(0, cfg.hero.overlay_opacity_percent / 100));
 
   const gridRef = useRef<HTMLDivElement>(null);
   const metricsSectionRef = useRef<HTMLDivElement>(null);
@@ -222,106 +228,34 @@ export default function Vision() {
 
       {/* Our Vision Section — Hero with 3D effects */}
       <section
-        className="relative px-6 md:px-16 lg:px-24 overflow-hidden max-md:min-h-0 max-md:pb-6 md:min-h-[720px] flex items-start md:items-center justify-center"
+        className="relative px-6 md:px-16 lg:px-24 overflow-hidden min-h-[520px] max-md:pb-6 md:min-h-[720px] flex items-start md:items-center justify-center"
       >
-        {heroHasVideo ? (
-          <video
-            className="absolute inset-0 w-full h-full object-cover object-top"
-            src={heroVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
-            aria-hidden
-          />
-        ) : (
-          <>
-            <img
-              src={heroBg}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-top"
-            />
-            {heroOverlayOpacity > 0 && (
-              <div
-                className="absolute inset-0 pointer-events-none bg-black"
-                style={{ opacity: heroOverlayOpacity }}
-              />
-            )}
-          </>
-        )}
+        <video
+          ref={heroVideoRef}
+          className="absolute inset-0 z-0 w-full h-full object-cover object-top"
+          src={heroVideoSrc}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden
+          onError={() => {
+            if (heroVideoSrc !== VISION_HERO_VIDEO_FALLBACK) {
+              setHeroVideoSrc(VISION_HERO_VIDEO_FALLBACK);
+            }
+          }}
+        />
 
-        {!heroHasVideo && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none mt-5">
-
-          {/* Rain Dots — slower, graceful falling with drift */}
-          {cfg.hero.show_rain &&
-            Array.from({ length: 30 }).map((_, i) => {
-            const left = `${(i * 3.3) % 100}%`;
-            const delay = (i * 0.12) % 6;
-            const duration = 5 + (i % 5) * 1.5;
-            const size = 2 + (i % 3);
-            const drift = -15 + (i % 7) * 5;
-            return (
-              <div
-                key={`rain-${i}`}
-                className="absolute rounded-full bg-amber-400/30 pointer-events-none"
-                style={{
-                  width: size,
-                  height: size,
-                  left,
-                  top: "-10px",
-                  animation: `rainDrop ${duration}s ease-in-out ${delay}s infinite`,
-                  ['--rain-drift' as string]: `${drift}px`,
-                }}
-              />
-            );
-          })}
-
-          {/* Watermark */}
-          {cfg.hero.show_watermark && (
-          <div className="absolute inset-0 flex items-center justify-center select-none">
-            <span
-              className="font-serif text-[100px] md:text-[160px] lg:text-[200px] font-bold tracking-tighter text-amber-500/[0.04] whitespace-nowrap "
-              style={{ transform: "rotate(-8deg)" }}
-            >
-              {cfg.hero.watermark_text}
-            </span>
-          </div>
-          )}
-
-          {/* Subtle radial glow behind stats */}
-          {cfg.hero.show_radial_blob && (
-          <div
-            className="absolute rounded-full pointer-events-none"
-            style={{
-              width: 400,
-              height: 400,
-              right: "-5%",
-              top: "10%",
-              background: "radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%)",
-            }}
-          />
-          )}
-        </div>
-        )}
-
-        <div
-          className={`flex flex-col items-center relative z-10 ${
-            heroHasVideo ? "text-gray-900" : "text-white"
-          }`}
-        >
-          <div className="max-w-4xl mx-auto text-center max-md:mt-[180px] max-md:pb-2 md:mt-[150px]">
+        <div className="flex flex-col items-center relative z-10 text-gray-900">
+          <div className="max-w-4xl mx-auto text-center max-md:mt-[250px] max-md:pb-2 md:mt-[250px]">
             <div className="mb-3 hero-animate-1">
               <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase">
                 {cfg.hero.eyebrow}
               </span>
             </div>
 
-            <h2
-              className={`text-2xl md:text-4xl font-sans mb-5 hero-animate-2 ${
-                heroHasVideo ? "text-gray-900" : "text-white"
-              }`}
-            >
+            <h2 className="text-2xl md:text-4xl font-sans mb-5 text-gray-900 hero-animate-2">
               {cfg.hero.headline_before}
               <em className="text-refex-gold relative inline-block not-italic">
                 {cfg.hero.headline_emphasis}
@@ -334,23 +268,14 @@ export default function Vision() {
             </h2>
 
             <div className="mb-5 hero-animate-3 max-w-2xl mx-auto">
-              <p
-                className={`text-base font-sans leading-relaxed ${
-                  heroHasVideo ? "text-gray-800" : "text-gray-200"
-                }`}
-              >
+              <p className="text-base font-sans text-gray-800 leading-relaxed">
                 {cfg.hero.pull_quote}
               </p>
             </div>
 
             <div className="space-y-2 hero-animate-4 max-w-2xl mx-auto max-md:mb-0">
               {cfg.hero.paragraphs.map((para, pi) => (
-                <p
-                  key={pi}
-                  className={`text-sm font-sans ${
-                    heroHasVideo ? "text-gray-700" : "text-gray-200"
-                  }`}
-                >
+                <p key={pi} className="text-sm font-sans text-gray-700">
                   {para}
                 </p>
               ))}
