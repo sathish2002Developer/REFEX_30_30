@@ -247,8 +247,8 @@ export default function Vision() {
           }}
         />
 
-        <div className="flex flex-col items-center relative z-10 text-gray-900 ">
-          <div className="max-w-4xl mx-auto  max-md:mt-[260px] max-md:pb-4 md:mt-[110px]">
+        <div className="flex flex-col items-center relative z-10 text-gray-900  text-center">
+          <div className="max-w-4xl mx-auto  max-md:mt-[260px] max-md:pb-4 md:mt-[160px]">
             <div className="mb-3 hero-animate-1">
               <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase">
                 {cfg.hero.eyebrow}
@@ -267,13 +267,13 @@ export default function Vision() {
               {cfg.hero.headline_after}
             </h2>
 
-            <div className="mb-5 hero-animate-3 max-w-2xl ">
+            <div className="mb-5 hero-animate-3 max-w-4xl ">
               <p className="text-base font-sans text-gray-800 leading-relaxed">
                 {cfg.hero.pull_quote}
               </p>
             </div>
 
-            <div className="space-y-2 hero-animate-4 max-w-2xl  max-md:mb-0">
+            <div className="space-y-2 hero-animate-4 max-w-6xl ml-3  max-md:mb-0">
               {cfg.hero.paragraphs.map((para, pi) => (
                 <p key={pi} className="text-sm font-sans text-gray-700">
                   {para}
