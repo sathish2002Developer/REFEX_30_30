@@ -155,7 +155,10 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <Navbar />
 
-      <section className="relative flex items-center justify-center overflow-hidden pt-16 md:pt-20 min-h-[320px] md:min-h-[360px] lg:min-h-[400px]">
+      <section className="relative flex items-center justify-center overflow-hidden pt-16 md:pt-20 min-h-[320px] md:min-h-[360px] lg:min-h-[400px]"
+       style={{
+        background: "#4e4a4b;"
+       }}>
         <img
           src={heroBg}
           alt="Refex Group Leadership"
