@@ -217,7 +217,7 @@ export default function Home() {
                   <img
                     src={heroImg}
                     alt=""
-                    className="h-[88%] w-[88%] rounded-full object-contain animate-ring-rotate"
+                    className="h-[88%] w-[88%] rounded-full object-contain"
                     style={{ animationDuration: "14s" }}
                   />
                 </span>
