@@ -891,10 +891,18 @@ const getStats = async (_req, res) => {
     `);
 
     const [wordCloud] = await sequelize.query(`
-      SELECT word, COUNT(*) AS count
-      FROM wall_posts
-      WHERE word IS NOT NULL AND word != ''
-      GROUP BY word
+      SELECT label AS word, COUNT(*) AS count
+      FROM (
+        SELECT TRIM(word) AS label
+        FROM wall_posts
+        WHERE TRIM(COALESCE(word, '')) != ''
+        UNION ALL
+        SELECT TRIM(tag) AS label
+        FROM wall_posts
+        WHERE TRIM(COALESCE(word, '')) = '' AND TRIM(COALESCE(tag, '')) != ''
+      ) AS labels
+      WHERE label IS NOT NULL AND label != ''
+      GROUP BY label
       ORDER BY count DESC
       LIMIT 30
     `);

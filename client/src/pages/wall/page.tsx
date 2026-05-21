@@ -38,10 +38,12 @@ export default function Wall() {
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [liveWordTrend, setLiveWordTrend] = useState<WallTrendingWordStat[]>([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
 
   const refreshTrendingWords = useCallback(async () => {
     const stats = await fetchWallStats();
-    if (stats?.wordCloud) setLiveWordTrend(stats.wordCloud);
+    setLiveWordTrend(Array.isArray(stats?.wordCloud) ? stats.wordCloud : []);
+    setTrendingLoading(false);
   }, []);
 
   const loadPosts = useCallback(async (manualRefresh?: boolean) => {
@@ -309,7 +311,8 @@ export default function Wall() {
       <RightSidebar
         cms={wallCms.sidebar}
         activeCount={entries.length + 35}
-        liveWordTrend={liveWordTrend.length ? liveWordTrend : null}
+        liveWordTrend={liveWordTrend}
+        trendingLoading={trendingLoading}
       />
     </div>
   </section>

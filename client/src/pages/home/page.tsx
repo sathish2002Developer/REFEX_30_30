@@ -11,7 +11,7 @@ import {
   type HomeHeroCta,
 } from "../../types/homeHeroCms";
 import fallbackHeroImg from "../../mocks/Home.jpg";
-import heroImg from "../../../public/images/globel.png";
+import heroImg from "../../../public/images/globe.gif";
 
 function ParticleField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -159,7 +159,7 @@ export default function Home() {
         <img
           src={heroBg}
           alt="Refex Group Leadership"
-          className="hidden md:block absolute w-full h-full object-cover md:object-cover object-top"
+          className="hidden md:block absolute w-full h-full object-contain md:object-contain object-top"
         />
 
         <div className="absolute inset-0 bg-black/40 pointer-events-none" />

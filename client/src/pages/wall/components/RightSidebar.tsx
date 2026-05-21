@@ -39,11 +39,17 @@ function liveTrendToCloudShapes(
 interface RightSidebarProps {
   cms: WallSidebarCms;
   activeCount: number;
-  /** When present and non-empty, replaces CMS word_cloud with counts from `/api/wall/stats`. */
-  liveWordTrend?: { word: string; count: number }[] | null;
+  /** Live trending from wall posts (`GET /api/wall/stats`) — never uses CMS static word list. */
+  liveWordTrend: { word: string; count: number }[];
+  trendingLoading?: boolean;
 }
 
-export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightSidebarProps) {
+export default function RightSidebar({
+  cms,
+  activeCount,
+  liveWordTrend,
+  trendingLoading = false,
+}: RightSidebarProps) {
   const [currentQuote, setCurrentQuote] = useState(0);
   const [currentPrompt, setCurrentPrompt] = useState(0);
   const [animatedCount, setAnimatedCount] = useState(0);
@@ -51,13 +57,10 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
 
   const prompts = cms.daily_prompts.length ? cms.daily_prompts : [""];
   const quotes = cms.vision_quotes.length ? cms.vision_quotes : [{ text: "", author: "" }];
-  const fromPosts = liveWordTrend?.length ? liveTrendToCloudShapes(liveWordTrend) : [];
-  const wordCloud =
-    fromPosts.length > 0
-      ? fromPosts
-      : cms.word_cloud.length > 0
-        ? cms.word_cloud
-        : [{ word: "—", size: 2 }];
+  const wordCloud = liveTrendToCloudShapes(liveWordTrend);
+  const trendCountByWord = new Map(
+    liveWordTrend.map((row) => [row.word.trim().toLowerCase(), row.count])
+  );
   const contributors = cms.top_contributors.length ? cms.top_contributors : [];
   const previewInitials = cms.leader_preview_initials.slice(0, 5);
   const totalLeaders = Math.max(1, cms.total_leaders_cap || 43);
@@ -187,27 +190,37 @@ export default function RightSidebar({ cms, activeCount, liveWordTrend }: RightS
         <div className="text-[10px] font-sans wall-muted-text tracking-widest uppercase mb-4">
           {cms.trending_title}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {wordCloud.map((w, i) => (
-            <span
-              key={`${w.word}-${i}`}
-              className={`font-sans wall-accent-text cursor-default transition-all duration-300 hover:scale-105 hover:opacity-80 ${
-                w.size === 1
-                  ? "text-[10px]"
-                  : w.size === 2
-                    ? "text-xs"
-                    : w.size === 3
-                      ? "text-sm"
-                      : w.size === 4
-                        ? "text-base font-medium"
-                        : "text-lg font-semibold"
-              }`}
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              {w.word}
-            </span>
-          ))}
-        </div>
+        {trendingLoading ? (
+          <p className="text-xs font-sans wall-muted-text">Loading trending words…</p>
+        ) : wordCloud.length === 0 ? (
+          <p className="text-xs font-sans wall-muted-text leading-relaxed">
+            No trending words yet. Words come from posts on the wall — create a post with a
+            &quot;One word&quot; tag to appear here.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {wordCloud.map((w, i) => (
+              <span
+                key={`${w.word}-${i}`}
+                title={`${w.word} (${trendCountByWord.get(w.word.trim().toLowerCase()) ?? 0} posts)`}
+                className={`font-sans wall-accent-text cursor-default transition-all duration-300 hover:scale-105 hover:opacity-80 ${
+                  w.size === 1
+                    ? "text-[10px]"
+                    : w.size === 2
+                      ? "text-xs"
+                      : w.size === 3
+                        ? "text-sm"
+                        : w.size === 4
+                          ? "text-base font-medium"
+                          : "text-lg font-semibold"
+                }`}
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                {w.word}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="wall-panel rounded-xl p-6 shadow-sm relative overflow-hidden">
