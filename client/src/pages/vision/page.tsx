@@ -228,11 +228,11 @@ export default function Vision() {
 
       {/* Our Vision Section — Hero with 3D effects */}
       <section
-        className="relative px-6 md:px-16 lg:px-24 overflow-hidden min-h-[520px] max-md:pb-6 md:min-h-[720px] flex items-start md:items-center justify-center max-md:pt-16 md:pt-0"
+        className="relative px-6 md:px-10 lg:px-24 overflow-hidden min-h-[560px] max-md:pb-6 md:min-h-[790px] flex items-start md:items-center justify-center max-md:pt-16 md:pt-0"
       >
         <video
           ref={heroVideoRef}
-          className="absolute inset-0 z-0 w-full h-full object-cover object-top"
+          className="absolute inset-0 z-0 w-full h-full object-cover object-top height-[290px] md:top-0"
           src={heroVideoSrc}
           autoPlay
           muted
@@ -247,8 +247,8 @@ export default function Vision() {
           }}
         />
 
-        <div className="flex flex-col items-center relative z-10 text-gray-900">
-          <div className="max-w-4xl mx-auto  max-md:mt-[260px] max-md:pb-4 md:mt-[180px]">
+        <div className="flex flex-col items-center relative z-10 text-gray-900 ">
+          <div className="max-w-4xl mx-auto  max-md:mt-[260px] max-md:pb-4 md:mt-[110px]">
             <div className="mb-3 hero-animate-1">
               <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase">
                 {cfg.hero.eyebrow}
