@@ -228,11 +228,11 @@ export default function Vision() {
 
       {/* Our Vision Section — Hero with 3D effects */}
       <section
-        className="relative px-6 md:px-10 lg:px-24 overflow-hidden min-h-[560px] max-md:pb-6 md:min-h-[790px] flex items-start md:items-center justify-center max-md:pt-16 md:pt-0"
+        className="relative px-6 md:px-10 lg:px-24 overflow-hidden min-h-[560px] max-md:pb-6 md:min-h-[680px] flex items-start md:items-center justify-center max-md:pt-16 md:pt-0"
       >
         <video
           ref={heroVideoRef}
-          className="absolute inset-0 z-0 w-full h-full object-cover object-top height-[290px] md:top-0"
+          className="absolute inset-0 z-0 w-full h-full object-cover object-top height-[290px] md:top-0 md :h-full"
           src={heroVideoSrc}
           autoPlay
           muted
