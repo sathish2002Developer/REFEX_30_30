@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const {
   WallPost,
   WallPollOption,
@@ -878,8 +879,177 @@ const deleteComment = async (req, res) => {
   }
 };
 
-const getStats = async (_req, res) => {
+const ACTIVE_LEADER_HOURS = 24;
+
+function leaderMapKey(row) {
+  const id = row.wall_member_id != null ? Number(row.wall_member_id) : 0;
+  if (id > 0) return `m:${id}`;
+  const name = String(row.name || "").trim();
+  const initials = String(row.initials || "").trim().toUpperCase();
+  return `n:${name}|${initials}`;
+}
+
+function upsertActiveLeader(map, row, at) {
+  const key = leaderMapKey(row);
+  const lastActiveAt = at instanceof Date ? at : new Date(at);
+  const name = String(row.name || "").trim() || "Leader";
+  const initials =
+    String(row.initials || "").trim().toUpperCase() || initialsFromName(name);
+  const role = String(row.role || "").trim() || "Refex Leader";
+  const wallMemberId =
+    row.wall_member_id != null && Number(row.wall_member_id) > 0
+      ? Number(row.wall_member_id)
+      : null;
+  const avatar_url = row.avatar_url ? String(row.avatar_url).trim() : null;
+
+  const prev = map.get(key);
+  if (!prev || lastActiveAt > prev.lastActiveAt) {
+    map.set(key, {
+      wallMemberId,
+      name,
+      initials,
+      role,
+      lastActiveAt,
+      avatar_url: avatar_url || prev?.avatar_url || null,
+    });
+  } else if (avatar_url && !prev.avatar_url) {
+    prev.avatar_url = avatar_url;
+  }
+}
+
+async function enrichActiveLeaderAvatars(map) {
+  const entries = [...map.values()];
+  const memberIds = [
+    ...new Set(entries.map((e) => e.wallMemberId).filter((id) => id > 0)),
+  ];
+  const namesNeeding = [
+    ...new Set(
+      entries
+        .filter((e) => !e.avatar_url && e.name)
+        .map((e) => e.name.trim())
+        .filter(Boolean)
+    ),
+  ];
+
+  const avatarByMemberId = new Map();
+  const avatarByName = new Map();
+
+  if (memberIds.length) {
+    const members = await WallMember.findAll({
+      where: { id: { [Op.in]: memberIds }, avatar_url: { [Op.ne]: null } },
+      attributes: ["id", "name", "avatar_url"],
+    });
+    for (const m of members) {
+      if (m.avatar_url) {
+        avatarByMemberId.set(m.id, m.avatar_url);
+        avatarByName.set(m.name.trim().toLowerCase(), m.avatar_url);
+      }
+    }
+  }
+
+  if (namesNeeding.length) {
+    const byName = await WallMember.findAll({
+      where: { name: { [Op.in]: namesNeeding }, avatar_url: { [Op.ne]: null } },
+      attributes: ["id", "name", "avatar_url"],
+    });
+    for (const m of byName) {
+      if (m.avatar_url) {
+        avatarByMemberId.set(m.id, m.avatar_url);
+        avatarByName.set(m.name.trim().toLowerCase(), m.avatar_url);
+      }
+    }
+  }
+
+  for (const entry of entries) {
+    if (entry.avatar_url) continue;
+    if (entry.wallMemberId && avatarByMemberId.has(entry.wallMemberId)) {
+      entry.avatar_url = avatarByMemberId.get(entry.wallMemberId);
+    } else if (entry.name) {
+      entry.avatar_url = avatarByName.get(entry.name.trim().toLowerCase()) || null;
+    }
+  }
+}
+
+async function loadActiveLeaders(req) {
+  const since = new Date(Date.now() - ACTIVE_LEADER_HOURS * 60 * 60 * 1000);
+  const map = new Map();
+
+  const [postRows] = await sequelize.query(
+    `
+      SELECT wall_member_id, name, role, initials, MAX(created_at) AS last_active_at
+      FROM wall_posts
+      WHERE created_at >= :since
+      GROUP BY wall_member_id, name, role, initials
+    `,
+    { replacements: { since } }
+  );
+  for (const row of postRows) {
+    upsertActiveLeader(map, row, row.last_active_at);
+  }
+
+  const [commentRows] = await sequelize.query(
+    `
+      SELECT wall_member_id, name, role, initials, MAX(created_at) AS last_active_at
+      FROM wall_comments
+      WHERE created_at >= :since
+      GROUP BY wall_member_id, name, role, initials
+    `,
+    { replacements: { since } }
+  );
+  for (const row of commentRows) {
+    upsertActiveLeader(map, row, row.last_active_at);
+  }
+
+  const loggedIn = await WallMember.findAll({
+    where: { is_active: true, updated_at: { [Op.gte]: since } },
+    attributes: ["id", "name", "designation", "team_entity", "updated_at", "avatar_url"],
+    order: [["updated_at", "DESC"]],
+  });
+  for (const m of loggedIn) {
+    const role = [m.designation, m.team_entity].filter(Boolean).join(" · ") || "Refex Leader";
+    upsertActiveLeader(
+      map,
+      {
+        wall_member_id: m.id,
+        name: m.name,
+        initials: initialsFromName(m.name),
+        role,
+        avatar_url: m.avatar_url,
+      },
+      m.updated_at
+    );
+  }
+
+  await enrichActiveLeaderAvatars(map);
+
+  const leaders = [...map.values()].sort(
+    (a, b) => b.lastActiveAt.getTime() - a.lastActiveAt.getTime()
+  );
+  const totalMembers = await WallMember.count({ where: { is_active: true } });
+
+  return {
+    count: leaders.length,
+    totalMembers: Math.max(totalMembers, 1),
+    leaders: leaders.map((l) => {
+      const stored = l.avatar_url || null;
+      const resolved = resolveMemberAvatar(req, stored);
+      return {
+        wallMemberId: l.wallMemberId,
+        name: l.name,
+        initials: l.initials,
+        role: l.role,
+        lastActiveAt: l.lastActiveAt.toISOString(),
+        avatar_url: stored,
+        avatarUrl: resolved || undefined,
+      };
+    }),
+  };
+}
+
+const getStats = async (req, res) => {
   try {
+    const activeLeaders = await loadActiveLeaders(req);
+
     const [topContributors] = await sequelize.query(`
       SELECT name, role, initials,
              COUNT(*) AS posts,
@@ -911,6 +1081,7 @@ const getStats = async (_req, res) => {
 
     return responseStatus(res, 200, "Stats loaded", {
       totalPosts,
+      activeLeaders,
       topContributors: topContributors.map((c) => ({
         name: c.name,
         role: c.role,

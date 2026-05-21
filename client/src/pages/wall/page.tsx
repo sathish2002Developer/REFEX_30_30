@@ -13,6 +13,7 @@ import {
   likeWallPost,
   bookmarkWallPost,
   type WallTrendingWordStat,
+  type WallActiveLeaderStat,
   type CreatePostPayload,
 } from "../../services/wallApi";
 import { useWallAuth } from "../../context/WallAuthContext";
@@ -38,12 +39,18 @@ export default function Wall() {
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [liveWordTrend, setLiveWordTrend] = useState<WallTrendingWordStat[]>([]);
+  const [activeLeaders, setActiveLeaders] = useState<WallActiveLeaderStat[]>([]);
+  const [totalWallMembers, setTotalWallMembers] = useState(43);
   const [trendingLoading, setTrendingLoading] = useState(true);
+  const [activeLeadersLoading, setActiveLeadersLoading] = useState(true);
 
-  const refreshTrendingWords = useCallback(async () => {
+  const refreshWallStats = useCallback(async () => {
     const stats = await fetchWallStats();
     setLiveWordTrend(Array.isArray(stats?.wordCloud) ? stats.wordCloud : []);
+    setActiveLeaders(stats?.activeLeaders?.leaders ?? []);
+    setTotalWallMembers(stats?.activeLeaders?.totalMembers ?? 43);
     setTrendingLoading(false);
+    setActiveLeadersLoading(false);
   }, []);
 
   const loadPosts = useCallback(async (manualRefresh?: boolean) => {
@@ -62,11 +69,11 @@ export default function Wall() {
     } catch {
       setError("Could not load posts. Make sure the backend and MySQL are running.");
     } finally {
-      void refreshTrendingWords();
+      void refreshWallStats();
       setPostsBootLoading(false);
       setPostsRefreshing(false);
     }
-  }, [entries.length, refreshTrendingWords]);
+  }, [entries.length, refreshWallStats]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,12 +106,12 @@ export default function Wall() {
         }
       });
 
-    void refreshTrendingWords();
+    void refreshWallStats();
 
     return () => {
       cancelled = true;
     };
-  }, [refreshTrendingWords]);
+  }, [refreshWallStats]);
 
   const submitPost = useCallback(
     async (data: CreatePostPayload) => {
@@ -113,14 +120,14 @@ export default function Wall() {
         const newEntry = await createWallPost(data);
         setEntries((prev) => [newEntry, ...prev]);
         setError(null);
-        await refreshTrendingWords();
+        await refreshWallStats();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to save post");
       } finally {
         setPosting(false);
       }
     },
-    [refreshTrendingWords]
+    [refreshWallStats]
   );
 
   const handlePost = useCallback(
@@ -310,9 +317,11 @@ export default function Wall() {
 
       <RightSidebar
         cms={wallCms.sidebar}
-        activeCount={entries.length + 35}
+        activeLeaders={activeLeaders}
+        totalMembers={totalWallMembers}
         liveWordTrend={liveWordTrend}
         trendingLoading={trendingLoading}
+        activeLeadersLoading={activeLeadersLoading}
       />
     </div>
   </section>

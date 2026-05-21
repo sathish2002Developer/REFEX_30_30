@@ -199,19 +199,62 @@ export interface WallTrendingWordStat {
   count: number;
 }
 
-/** Public — aggregates `word` from wall posts (`GET /stats`). */
+export interface WallActiveLeaderStat {
+  wallMemberId: number | null;
+  name: string;
+  initials: string;
+  role: string;
+  lastActiveAt: string;
+  avatar_url?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface WallActiveLeadersPayload {
+  count: number;
+  totalMembers: number;
+  leaders: WallActiveLeaderStat[];
+}
+
+/** Public — wall aggregates (`GET /stats`). */
 export async function fetchWallStats(): Promise<{
   wordCloud: WallTrendingWordStat[];
   totalPosts?: number;
+  activeLeaders?: WallActiveLeadersPayload;
+  topContributors?: {
+    name: string;
+    role: string;
+    initials: string;
+    posts: number;
+    likes: number;
+    streak: number;
+  }[];
 } | null> {
   const { ok, data } = await getPublicWallPayload<{
     wordCloud: WallTrendingWordStat[];
     totalPosts: number;
+    activeLeaders?: WallActiveLeadersPayload;
+    topContributors?: {
+      name: string;
+      role: string;
+      initials: string;
+      posts: number;
+      likes: number;
+      streak: number;
+    }[];
   }>("/stats");
   if (!ok || !data) return null;
+  const leaders = data.activeLeaders;
   return {
     wordCloud: Array.isArray(data.wordCloud) ? data.wordCloud : [],
     totalPosts: typeof data.totalPosts === "number" ? data.totalPosts : undefined,
+    activeLeaders: leaders
+      ? {
+          count: Number(leaders.count) || 0,
+          totalMembers: Math.max(1, Number(leaders.totalMembers) || 1),
+          leaders: Array.isArray(leaders.leaders) ? leaders.leaders : [],
+        }
+      : { count: 0, totalMembers: 1, leaders: [] },
+    topContributors: Array.isArray(data.topContributors) ? data.topContributors : [],
   };
 }
 

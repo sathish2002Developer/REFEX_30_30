@@ -1,18 +1,7 @@
 import { useState, useEffect } from "react";
-import type {
-  WallContributorRowCms,
-  WallSidebarCms,
-  WallWordItemCms,
-} from "../../../types/wallPageCms";
-
-function leaderNameForInitials(
-  initials: string,
-  contributors: WallContributorRowCms[]
-): string {
-  const key = initials.trim().toUpperCase();
-  const match = contributors.find((c) => c.initials.trim().toUpperCase() === key);
-  return match?.name?.trim() || initials;
-}
+import type { WallSidebarCms, WallWordItemCms } from "../../../types/wallPageCms";
+import type { WallActiveLeaderStat } from "../../../services/wallApi";
+import UserAvatar from "./UserAvatar";
 
 function liveTrendToCloudShapes(
   rows: { word: string; count: number }[]
@@ -38,17 +27,21 @@ function liveTrendToCloudShapes(
 
 interface RightSidebarProps {
   cms: WallSidebarCms;
-  activeCount: number;
-  /** Live trending from wall posts (`GET /api/wall/stats`) — never uses CMS static word list. */
+  /** Live active leaders from posts, comments, and logins (`GET /api/wall/stats`). */
+  activeLeaders: WallActiveLeaderStat[];
+  totalMembers: number;
   liveWordTrend: { word: string; count: number }[];
   trendingLoading?: boolean;
+  activeLeadersLoading?: boolean;
 }
 
 export default function RightSidebar({
   cms,
-  activeCount,
+  activeLeaders,
+  totalMembers,
   liveWordTrend,
   trendingLoading = false,
+  activeLeadersLoading = false,
 }: RightSidebarProps) {
   const [currentQuote, setCurrentQuote] = useState(0);
   const [currentPrompt, setCurrentPrompt] = useState(0);
@@ -61,9 +54,10 @@ export default function RightSidebar({
   const trendCountByWord = new Map(
     liveWordTrend.map((row) => [row.word.trim().toLowerCase(), row.count])
   );
-  const contributors = cms.top_contributors.length ? cms.top_contributors : [];
-  const previewInitials = cms.leader_preview_initials.slice(0, 5);
-  const totalLeaders = Math.max(1, cms.total_leaders_cap || 43);
+
+  const activeCount = activeLeaders.length;
+  const previewLeaders = activeLeaders.slice(0, 5);
+  const ringTotal = Math.max(1, totalMembers);
 
   useEffect(() => {
     let start = 0;
@@ -98,19 +92,17 @@ export default function RightSidebar({
     return () => clearInterval(promptTimer);
   }, [prompts.length]);
 
-  const refreshPrompt = () => {
-    if (prompts.length <= 1) return;
-    setCurrentPrompt((prev) => (prev + 1) % prompts.length);
-  };
-
-  const progress = (animatedCount / totalLeaders) * 100;
+  const progress = (animatedCount / ringTotal) * 100;
   const circumference = 2 * Math.PI * 36;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
-  const plusExtra = Math.max(0, animatedCount - previewInitials.length);
-  const previewLeaders = previewInitials.map((ini) => ({
-    initials: ini,
-    name: leaderNameForInitials(ini, contributors),
-  }));
+  const plusExtra = Math.max(0, activeCount - previewLeaders.length);
+
+  const activeSubtext =
+    activeCount === 0
+      ? "No leaders active in the last 24 hours"
+      : activeCount === 1
+        ? "1 leader active in the last 24 hours"
+        : `${activeCount} leaders active in the last 24 hours`;
 
   return (
     <div className="space-y-5 lg:w-80 shrink-0">
@@ -140,8 +132,11 @@ export default function RightSidebar({
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-serif wall-accent-text">{animatedCount}</span>
-              {/* <span className="text-[10px] font-sans wall-muted-text">of {totalLeaders}</span> */}
+              {activeLeadersLoading ? (
+                <i className="ri-loader-4-line text-xl wall-accent-text animate-spin" aria-hidden />
+              ) : (
+                <span className="text-2xl font-serif wall-accent-text">{animatedCount}</span>
+              )}
             </div>
           </div>
         </div>
@@ -151,38 +146,42 @@ export default function RightSidebar({
               leadersHover && previewLeaders.length > 0 ? "wall-body-text" : "wall-muted-text"
             }`}
           >
-            {leadersHover && previewLeaders.length > 0
-              ? previewLeaders.map((l) => l.name).join(" · ")
-              : cms.active_leaders_sub}
+            {activeLeadersLoading
+              ? "Loading active leaders…"
+              : leadersHover && previewLeaders.length > 0
+                ? previewLeaders.map((l) => l.name).join(" · ")
+                : activeSubtext}
           </p>
         </div>
-        <div className="flex items-center justify-center gap-1.5 mt-2 flex-wrap">
-          {previewLeaders.map((leader, i) => (
-            <div
-              key={`${leader.initials}-${i}`}
-              className="relative group"
-              title={leader.name}
-            >
+        <div className="flex items-center justify-center gap-1.5 mt-2 flex-wrap min-h-[1.75rem]">
+          {activeLeadersLoading ? null : previewLeaders.length > 0 ? (
+            previewLeaders.map((leader, i) => (
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-semibold wall-accent-text cursor-default ring-2 ring-transparent group-hover:ring-amber-400/50 transition-all"
-                style={{
-                  backgroundColor: "var(--wall-accent-light, #fffbeb)",
-                  border: "1px solid var(--wall-card-hover-border, #fde68a)",
-                }}
+                key={`${leader.wallMemberId ?? leader.name}-${i}`}
+                className="relative group ring-2 ring-transparent group-hover:ring-amber-400/50 rounded-full transition-all"
+                title={leader.name}
               >
-                {leader.initials}
+                <UserAvatar
+                  avatarUrl={leader}
+                  initials={leader.initials}
+                  className="w-7 h-7 cursor-default"
+                />
+                <span
+                  role="tooltip"
+                  className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-[10px] font-sans font-medium whitespace-nowrap rounded-md bg-gray-900 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-30 shadow-md"
+                >
+                  {leader.name}
+                </span>
               </div>
-              <span
-                role="tooltip"
-                className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-[10px] font-sans font-medium whitespace-nowrap rounded-md bg-gray-900 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-30 shadow-md"
-              >
-                {leader.name}
-              </span>
+            ))
+          ) : (
+            <span className="text-[10px] font-sans wall-muted-text">Post or sign in to appear here</span>
+          )}
+          {!activeLeadersLoading && plusExtra > 0 ? (
+            <div className="w-6 h-6 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-[8px] text-gray-500">
+              +{plusExtra}
             </div>
-          ))}
-          <div className="w-6 h-6 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-[8px] text-gray-500">
-            +{plusExtra}
-          </div>
+          ) : null}
         </div>
       </div>
 
@@ -240,19 +239,7 @@ export default function RightSidebar({
             {prompts[currentPrompt] ?? ""}
           </p>
         </div>
-        {/* {prompts.length > 1 && (
-          <button
-            type="button"
-            onClick={refreshPrompt}
-            className="mt-4 flex items-center gap-2 text-xs font-sans wall-accent-text transition-colors cursor-pointer"
-          >
-            <i className="ri-refresh-line"></i>
-            <span>{cms.new_prompt_label}</span>
-          </button>
-        )} */}
       </div>
-
-    
 
       <div className="wall-panel rounded-xl p-6 shadow-sm relative overflow-hidden">
         <div
@@ -270,29 +257,7 @@ export default function RightSidebar({
           <p className="text-sm font-serif wall-body-text italic leading-relaxed pl-4 transition-opacity duration-700">
             {quotes[currentQuote]?.text}
           </p>
-          {/* <p className="text-[10px] font-sans wall-accent-text mt-3 pl-4 tracking-wide">
-            — {quotes[currentQuote]?.author}
-          </p> */}
         </div>
-        {/* {quotes.length > 1 && (
-          <div className="flex justify-center gap-1.5 mt-4">
-            {quotes.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setCurrentQuote(i)}
-                className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${
-                  i === currentQuote ? "w-4" : "bg-gray-200 hover:bg-gray-400"
-                }`}
-                style={
-                  i === currentQuote
-                    ? { backgroundColor: "var(--wall-accent, #d97706)" }
-                    : undefined
-                }
-              />
-            ))}
-          </div>
-        )} */}
       </div>
     </div>
   );

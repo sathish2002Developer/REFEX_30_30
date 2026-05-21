@@ -14,6 +14,12 @@ const {
 
 const RESERVED_WALL_BLOCKED = reservedCmsOperatorEmails();
 
+/** Bump `updated_at` so Active Leaders can count recent logins (24h window). */
+async function touchWallMemberActivity(member) {
+  if (!member?.id) return;
+  await WallMember.update({ updated_at: new Date() }, { where: { id: member.id } });
+}
+
 async function findActiveWallMember(email) {
   if (RESERVED_WALL_BLOCKED.has(email)) {
     return { error: "reserved" };
@@ -116,6 +122,7 @@ const login = async (req, res) => {
 
       await member.update({ password: hashWallPassword(password) });
       await member.reload();
+      await touchWallMemberActivity(member);
 
       const user = mapWallMember(member, req);
       const token = signWallToken(member);
@@ -131,6 +138,9 @@ const login = async (req, res) => {
     if (!valid) {
       return responseStatus(res, 401, "Invalid Password");
     }
+
+    await touchWallMemberActivity(member);
+    await member.reload();
 
     const user = mapWallMember(member, req);
     const token = signWallToken(member);
