@@ -36,6 +36,7 @@ function defaultVisionPayload() {
   return {
     hero: {
       background_image_url: DEFAULT_HERO_BG,
+      background_video_url: "/images/Vision.mp4",
       overlay_opacity_percent: 0,
       watermark_text: "30 By 30",
       eyebrow: "Our Vision",
@@ -158,6 +159,7 @@ function mergeIncomingPayload(dbPayload, incoming) {
 function serializeForResponse(payload, req) {
   const p = mergeIncomingPayload(payload, {});
   const heroBg = resolveAssetUrl(p.hero?.background_image_url, req);
+  const heroVideo = resolveAssetUrl(p.hero?.background_video_url, req);
   const portrait = resolveAssetUrl(p.leadership?.portrait_url, req);
   return {
     ...p,
@@ -165,6 +167,7 @@ function serializeForResponse(payload, req) {
       ...p.hero,
       background_image_url: p.hero?.background_image_url || DEFAULT_HERO_BG,
       background_image_resolved_url: heroBg || p.hero?.background_image_url || DEFAULT_HERO_BG,
+      background_video_resolved_url: heroVideo || p.hero?.background_video_url || "",
     },
     leadership: {
       ...p.leadership,
@@ -223,6 +226,10 @@ const patchAdminVisionPage = async (req, res) => {
     if (files.heroBackground?.[0]?.filename)
       incoming = deepMerge(incoming, {
         hero: { background_image_url: pickUploaded(files.heroBackground[0].path) },
+      });
+    if (files.heroVideo?.[0]?.filename)
+      incoming = deepMerge(incoming, {
+        hero: { background_video_url: pickUploaded(files.heroVideo[0].path) },
       });
     if (files.leaderPortrait?.[0]?.filename)
       incoming = deepMerge(incoming, {

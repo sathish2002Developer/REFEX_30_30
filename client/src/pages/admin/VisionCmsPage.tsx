@@ -89,6 +89,9 @@ export default function VisionCmsPage() {
     const heroFile = (document.getElementById("vision-hero-bg") as HTMLInputElement | null)?.files?.[0];
     if (heroFile) fd.append("heroBackground", heroFile);
 
+    const heroVideoFile = (document.getElementById("vision-hero-video") as HTMLInputElement | null)?.files?.[0];
+    if (heroVideoFile) fd.append("heroVideo", heroVideoFile);
+
     const leaderFile = (document.getElementById("vision-leader-img") as HTMLInputElement | null)?.files?.[0];
     if (leaderFile) fd.append("leaderPortrait", leaderFile);
 
@@ -186,6 +189,37 @@ export default function VisionCmsPage() {
             />
           </label>
           <input id="vision-hero-bg" type="file" accept="image/*" className="text-sm" />
+          <p className="text-xs text-slate-500 break-all">
+            Current video: {v.hero.background_video_url || "(none — image only)"}
+          </p>
+          <label className="block text-xs text-slate-400">
+            Background video URL
+            <input
+              type="text"
+              value={v.hero.background_video_url || ""}
+              onChange={(e) =>
+                setV({ ...v, hero: { ...v.hero, background_video_url: e.target.value } })
+              }
+              className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm"
+              placeholder="/images/Vision.mp4 or /uploads/cms/…"
+            />
+          </label>
+          <label className="block text-xs text-slate-400">
+            Upload hero video (MP4 / WebM)
+            <input
+              id="vision-hero-video"
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              className="mt-1 block text-sm"
+            />
+          </label>
+          <button
+            type="button"
+            className="text-xs text-slate-400 underline hover:text-slate-200"
+            onClick={() => setV({ ...v, hero: { ...v.hero, background_video_url: "" } })}
+          >
+            Remove video (use image only)
+          </button>
           <label className="block text-xs">
             Overlay darkness (0–100)
             <input

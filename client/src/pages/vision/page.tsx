@@ -73,12 +73,17 @@ export default function Vision() {
   const pillars = cfg.pillars_section.pillars;
   const dashboardMetrics = cfg.metrics;
   const heroBg = cfg.hero.background_image_resolved_url || cfg.hero.background_image_url;
+  const heroVideoRaw = (cfg.hero.background_video_url || "").trim();
+  const heroVideo =
+    heroVideoRaw.startsWith("/")
+      ? heroVideoRaw
+      : cfg.hero.background_video_resolved_url || heroVideoRaw;
+  const heroHasVideo = Boolean(heroVideo);
   const leaderPortrait = cfg.leadership.portrait_resolved_url || cfg.leadership.portrait_url;
-  /** Cap dark overlay so the hero photo stays visible (CMS 0–100 → max ~18% black). */
-  const heroOverlayOpacity = Math.min(
-    0.18,
-    Math.max(0, cfg.hero.overlay_opacity_percent / 100)
-  );
+  /** Dark overlay only for image hero (video plays with no overlay). */
+  const heroOverlayOpacity = heroHasVideo
+    ? 0
+    : Math.min(0.18, Math.max(0, cfg.hero.overlay_opacity_percent / 100));
 
   const gridRef = useRef<HTMLDivElement>(null);
   const metricsSectionRef = useRef<HTMLDivElement>(null);
@@ -219,19 +224,33 @@ export default function Vision() {
       <section
         className="relative px-6 md:px-16 lg:px-24 overflow-hidden max-md:min-h-0 max-md:pb-6 md:min-h-[720px] flex items-start md:items-center justify-center"
       >
-        {/* Background image — object-top to show full image from top */}
-        <img
-          src={heroBg}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover object-top"
-        />
-        {/* Light overlay — keeps text readable without hiding the photo */}
-        <div
-          className="absolute inset-0 pointer-events-none bg-black"
-          style={{ opacity: heroOverlayOpacity }}
-        />
+        {heroHasVideo ? (
+          <video
+            className="absolute inset-0 w-full h-full object-cover object-top"
+            src={heroVideo}
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-hidden
+          />
+        ) : (
+          <>
+            <img
+              src={heroBg}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover object-top"
+            />
+            {heroOverlayOpacity > 0 && (
+              <div
+                className="absolute inset-0 pointer-events-none bg-black"
+                style={{ opacity: heroOverlayOpacity }}
+              />
+            )}
+          </>
+        )}
 
-        {/* Floating particles background */}
+        {!heroHasVideo && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none mt-5">
 
           {/* Rain Dots — slower, graceful falling with drift */}
@@ -262,7 +281,7 @@ export default function Vision() {
           {cfg.hero.show_watermark && (
           <div className="absolute inset-0 flex items-center justify-center select-none">
             <span
-              className="font-serif text-[100px] md:text-[160px] lg:text-[200px] font-bold tracking-tighter text-amber-500/[0.04] whitespace-nowrap"
+              className="font-serif text-[100px] md:text-[160px] lg:text-[200px] font-bold tracking-tighter text-amber-500/[0.04] whitespace-nowrap "
               style={{ transform: "rotate(-8deg)" }}
             >
               {cfg.hero.watermark_text}
@@ -284,9 +303,13 @@ export default function Vision() {
           />
           )}
         </div>
+        )}
 
-        <div className="flex flex-col items-center relative z-10">
-          {/* Centered text content */}
+        <div
+          className={`flex flex-col items-center relative z-10 ${
+            heroHasVideo ? "text-gray-900" : "text-white"
+          }`}
+        >
           <div className="max-w-4xl mx-auto text-center max-md:mt-[180px] max-md:pb-2 md:mt-[150px]">
             <div className="mb-3 hero-animate-1">
               <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase">
@@ -294,7 +317,11 @@ export default function Vision() {
               </span>
             </div>
 
-            <h2 className="text-2xl md:text-4xl font-sans  mb-5 text-white hero-animate-2">
+            <h2
+              className={`text-2xl md:text-4xl font-sans mb-5 hero-animate-2 ${
+                heroHasVideo ? "text-gray-900" : "text-white"
+              }`}
+            >
               {cfg.hero.headline_before}
               <em className="text-refex-gold relative inline-block not-italic">
                 {cfg.hero.headline_emphasis}
@@ -307,7 +334,11 @@ export default function Vision() {
             </h2>
 
             <div className="mb-5 hero-animate-3 max-w-2xl mx-auto">
-              <p className="text-base font-sans  text-gray-200 leading-relaxed">
+              <p
+                className={`text-base font-sans leading-relaxed ${
+                  heroHasVideo ? "text-gray-800" : "text-gray-200"
+                }`}
+              >
                 {cfg.hero.pull_quote}
               </p>
             </div>
@@ -316,7 +347,9 @@ export default function Vision() {
               {cfg.hero.paragraphs.map((para, pi) => (
                 <p
                   key={pi}
-                  className="text-sm font-sans text-gray-200"
+                  className={`text-sm font-sans ${
+                    heroHasVideo ? "text-gray-700" : "text-gray-200"
+                  }`}
                 >
                   {para}
                 </p>

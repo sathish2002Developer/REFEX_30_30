@@ -1,6 +1,9 @@
 export interface VisionHeroCms {
   background_image_url: string;
   background_image_resolved_url?: string;
+  /** When set, hero plays this video (image used as poster / fallback). */
+  background_video_url?: string;
+  background_video_resolved_url?: string;
   overlay_opacity_percent: number;
   watermark_text: string;
   eyebrow: string;
@@ -82,6 +85,7 @@ export const DEFAULT_VISION_PAGE_CMS: VisionPageCms = {
   hero: {
     background_image_url:
       "https://storage.readdy-site.link/project_files/04e95ea7-e673-4199-a33e-5a962ce92760/7a9ddfbd-1202-4660-af3a-eb88ce0facf1_Vision.jpg?v=175577d8715374fbeca5a1f3604f20c9",
+    background_video_url: "/images/Vision.mp4",
     overlay_opacity_percent: 0,
     watermark_text: "30 By 30",
     eyebrow: "Our Vision",
@@ -201,6 +205,10 @@ export function mergeVisionPageCms(api: VisionPageCms | null): VisionPageCms {
         api.hero?.background_image_resolved_url ||
         hero.background_image_resolved_url ||
         hero.background_image_url,
+      background_video_resolved_url:
+        api.hero?.background_video_resolved_url ||
+        hero.background_video_resolved_url ||
+        hero.background_video_url,
     },
     metrics: api.metrics?.length ? api.metrics : base.metrics,
     pillars_section,
@@ -216,8 +224,15 @@ export function mergeVisionPageCms(api: VisionPageCms | null): VisionPageCms {
 
 /** Strip computed fields before sending to admin API */
 export function visionPageCmsToPayload(v: VisionPageCms): VisionPageCms {
-  const hero = v.hero as VisionHeroCms & { background_image_resolved_url?: string };
-  const { background_image_resolved_url: _h, ...heroRest } = hero;
+  const hero = v.hero as VisionHeroCms & {
+    background_image_resolved_url?: string;
+    background_video_resolved_url?: string;
+  };
+  const {
+    background_image_resolved_url: _h,
+    background_video_resolved_url: _v,
+    ...heroRest
+  } = hero;
   const lead = v.leadership as VisionLeadershipCms & { portrait_resolved_url?: string };
   const { portrait_resolved_url: _p, ...leadRest } = lead;
   return {
