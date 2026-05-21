@@ -1,20 +1,47 @@
 const nodemailer = require('nodemailer');
 
+function smtpPort() {
+  return parseInt(process.env.SMTP_PORT || '587', 10);
+}
+
+function smtpSecure() {
+  const raw = String(process.env.SMTP_SECURE ?? '').trim().toLowerCase();
+  if (raw === 'true' || raw === '1') return true;
+  if (raw === 'false' || raw === '0') return false;
+  return smtpPort() === 465;
+}
+
+function smtpFromAddress() {
+  return (
+    process.env.SMTP_FROM_EMAIL ||
+    process.env.SMTP_FROM ||
+    process.env.SMTP_USER ||
+    ''
+  );
+}
+
+function buildSmtpTransportOptions() {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD || process.env.SMTP_PASS;
+  if (!user || !pass) {
+    console.warn(
+      'SMTP_USER and SMTP_PASSWORD (or SMTP_PASS) are not set — email sending will fail.'
+    );
+  }
+  return {
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: smtpPort(),
+    secure: smtpSecure(),
+    auth: user && pass ? { user, pass } : undefined,
+    tls: {
+      rejectUnauthorized: false,
+    },
+  };
+}
+
 class EmailService {
   constructor() {
-    // Create transporter using SMTP configuration
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: process.env.SMTP_PORT || 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_USER || 'refexmobility@refex.co.in',
-        pass: process.env.SMTP_PASS ||'xxgi abgr kywt lhqg'
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
+    this.transporter = nodemailer.createTransport(buildSmtpTransportOptions());
   }
 
   // Send contact form email
@@ -24,7 +51,7 @@ class EmailService {
 
       // Email content
       const mailOptions = {
-        from: process.env.SMTP_USER || 'sathishkumar.r@refex.co.in',
+        from: smtpFromAddress(),
         to: 'sathku007@gmail.com',
         subject: `New Contact Form Submission from ${name}`,
         html: `
@@ -128,7 +155,7 @@ class EmailService {
   async sendAutoReply(customerEmail, customerName) {
     try {
       const mailOptions = {
-        from: process.env.SMTP_USER || 'sathku007@gmail.com',
+        from: smtpFromAddress(),
         to: customerEmail,
         subject: 'Thank you for contacting Refex Life Sciences',
         html: `
@@ -244,6 +271,46 @@ class EmailService {
     } catch (error) {
       console.error('Business commute email error:', error);
       throw new Error('Failed to send business commute email');
+    }
+  }
+
+  async sendWallForgotPasswordEmail({ toEmail, name, password }) {
+    try {
+      const displayName = name || "there";
+      const from = smtpFromAddress();
+
+      const mailOptions = {
+        from: from ? `"Refex 30×30 Wall" <${from}>` : '"Refex 30×30 Wall"',
+        to: toEmail,
+        subject: "Your Refex Wall password",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #b8860b; margin-top: 0;">Refex Wall — password reminder</h2>
+            <p style="color: #333; line-height: 1.6;">Hi ${displayName},</p>
+            <p style="color: #333; line-height: 1.6;">
+              You requested your Wall sign-in password. Use the password below to sign in at The Wall:
+            </p>
+            <p style="margin: 24px 0; padding: 16px 20px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; font-size: 18px; font-weight: bold; letter-spacing: 0.05em; color: #92400e;">
+              ${password}
+            </p>
+            <p style="color: #666; font-size: 14px; line-height: 1.6;">
+              For security, change this password after signing in if your organisation allows it.
+              If you did not request this email, contact your administrator.
+            </p>
+            <p style="color: #999; font-size: 12px; margin-top: 32px;">
+              Refex 30×30 — The Wall
+            </p>
+          </div>
+        `,
+        text: `Hi ${displayName},\n\nYour Refex Wall password: ${password}\n\nSign in at The Wall with your work email and this password.\n`,
+      };
+
+      const result = await this.transporter.sendMail(mailOptions);
+      console.log("Wall forgot-password email sent:", result.messageId);
+      return { success: true, messageId: result.messageId };
+    } catch (error) {
+      console.error("Wall forgot-password email error:", error);
+      throw new Error("Failed to send password email");
     }
   }
 

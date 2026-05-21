@@ -1,6 +1,14 @@
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 
 const saltRounds = 10;
+
+/** One-time password for forgot-password email (meets validateNewPassword rules). */
+function generateTemporaryWallPassword() {
+  const token = crypto.randomBytes(9).toString("base64url").replace(/[^A-Za-z0-9]/g, "");
+  const core = (token + "Ax7y9").slice(0, 12);
+  return core;
+}
 
 function hasWallPasswordStored(passwordHash) {
   return passwordHash != null && String(passwordHash).trim() !== "";
@@ -46,4 +54,5 @@ module.exports = {
   verifyWallPassword,
   validateNewPassword,
   assertPasswordConfirmation,
+  generateTemporaryWallPassword,
 };

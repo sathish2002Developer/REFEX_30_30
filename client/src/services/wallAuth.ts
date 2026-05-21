@@ -116,24 +116,17 @@ export async function wallLogin(
   return user;
 }
 
-export interface WallForgotPasswordResult {
-  resetUrl?: string;
-  resetPath?: string;
-}
-
-export async function wallForgotPassword(
-  email: string
-): Promise<WallForgotPasswordResult> {
+export async function wallForgotPassword(email: string): Promise<string> {
   const res = await fetch(`${API_BASE}/auth/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: email.trim().toLowerCase() }),
   });
-  const json = await parseWallResponse<WallForgotPasswordResult>(res);
+  const json = await parseWallResponse<unknown>(res);
   if (!res.ok || !json.success) {
-    throw new Error(json.message || "Could not start password reset");
+    throw new Error(json.message || "Could not send password email");
   }
-  return json.data || {};
+  return json.message || "Your Wall password has been sent to your email.";
 }
 
 export async function wallResetPassword(

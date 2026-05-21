@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
 import { useWallAuth } from "../../../context/WallAuthContext";
 import {
   validateWallPasswordClient,
@@ -23,8 +22,6 @@ export default function WallLoginModal() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
-  const [resetLink, setResetLink] = useState<string | null>(null);
-  const [resetPath, setResetPath] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -41,8 +38,6 @@ export default function WallLoginModal() {
       setShowPassword(false);
       setError(null);
       setForgotSuccess(null);
-      setResetLink(null);
-      setResetPath(null);
       setSubmitting(false);
     }
   }, [loginOpen]);
@@ -154,18 +149,12 @@ export default function WallLoginModal() {
     e.preventDefault();
     setError(null);
     setForgotSuccess(null);
-    setResetLink(null);
-    setResetPath(null);
     setSubmitting(true);
     try {
-      const result = await wallForgotPassword(email);
-      setForgotSuccess(
-        "Use the link below to set a new password. The link expires in 30 minutes."
-      );
-      if (result.resetUrl) setResetLink(result.resetUrl);
-      if (result.resetPath) setResetPath(result.resetPath);
+      const msg = await wallForgotPassword(email);
+      setForgotSuccess(`${msg} Check your inbox and spam folder.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not start reset");
+      setError(err instanceof Error ? err.message : "Could not send password email");
     } finally {
       setSubmitting(false);
     }
@@ -177,7 +166,7 @@ export default function WallLoginModal() {
       ? needsSetup
         ? "First-time setup — create a password for your Wall account"
         : "Enter your Refex email and password to share on The Wall"
-      : "Enter your work email to get a password reset link";
+      : "Enter your work email. We will send your Wall password if the account exists.";
 
   return createPortal(
     <LoginModalShell closeLogin={closeLogin} title={title} subtitle={subtitle}>
@@ -281,19 +270,11 @@ export default function WallLoginModal() {
             </p>
           )}
 
-          {(resetLink || resetPath) && (
-            <ResetLinkBanner
-              resetLink={resetLink}
-              resetPath={resetPath}
-              closeLogin={closeLogin}
-            />
-          )}
-
           {error && <ErrorBanner message={error} />}
 
           <SubmitButton
             disabled={submitting || !email.trim()}
-            label={submitting ? "Creating link…" : "Get reset link"}
+            label={submitting ? "Sending…" : "Send password to email"}
           />
 
           <button
@@ -302,8 +283,6 @@ export default function WallLoginModal() {
               setView("signin");
               setError(null);
               setForgotSuccess(null);
-              setResetLink(null);
-              setResetPath(null);
             }}
             className="mt-3 w-full border-0 bg-transparent p-0 text-center text-xs font-sans text-gray-500 hover:text-gray-700 cursor-pointer"
           >
@@ -407,7 +386,7 @@ function EmailField(props: {
         value={props.email}
         onChange={(e) => props.setEmail(e.target.value)}
         onBlur={props.onBlur}
-        placeholder="you@refex.co.in"
+        placeholder="your emailId"
         required
         className="wall-login-modal__input"
       />
@@ -476,47 +455,6 @@ function SubmitButton(props: { disabled: boolean; label: string }) {
     >
       {props.label}
     </button>
-  );
-}
-
-function ResetLinkBanner(props: {
-  resetLink: string | null;
-  resetPath: string | null;
-  closeLogin: () => void;
-}) {
-  const navigate = useNavigate();
-
-  const openReset = () => {
-    props.closeLogin();
-    if (props.resetPath) {
-      navigate(props.resetPath);
-      return;
-    }
-    if (props.resetLink) {
-      try {
-        const url = new URL(props.resetLink, window.location.origin);
-        navigate(`${url.pathname}${url.search}`);
-      } catch {
-        window.location.assign(props.resetLink);
-      }
-    }
-  };
-
-  const displayUrl = props.resetPath || props.resetLink || "";
-
-  return (
-    <div className="m-0 mb-4 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-sans text-gray-600">
-      <button
-        type="button"
-        onClick={openReset}
-        className="m-0 mb-2 border-0 bg-transparent p-0 font-medium text-amber-700 hover:underline cursor-pointer"
-      >
-        Open reset page
-      </button>
-      {displayUrl && (
-        <p className="m-0 break-all text-[10px] text-gray-500">{displayUrl}</p>
-      )}
-    </div>
   );
 }
 

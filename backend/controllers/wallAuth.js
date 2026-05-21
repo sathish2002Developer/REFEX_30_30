@@ -4,12 +4,14 @@ const { responseStatus } = require("../helpers/response");
 const { mapWallMember, normalizeEmail } = require("../helpers/wallMember");
 const { signWallToken, WALL_JWT_SECRET } = require("../middlewares/wallAuth");
 const { reservedCmsOperatorEmails } = require("../helpers/reservedCmsEmails");
+const emailService = require("../services/email_service");
 const {
   hasWallPasswordStored,
   verifyWallPassword,
   hashWallPassword,
   validateNewPassword,
   assertPasswordConfirmation,
+  generateTemporaryWallPassword,
 } = require("../helpers/wallPassword");
 
 const RESERVED_WALL_BLOCKED = reservedCmsOperatorEmails();
@@ -164,44 +166,64 @@ const forgotPassword = async (req, res) => {
     }
 
     const member = await WallMember.findOne({ where: { email } });
-    if (!member || !member.is_active) {
+    if (!member) {
       return responseStatus(
         res,
-        200,
-        "If this email is registered on The Wall, a reset link has been sent."
+        404,
+        "This email is not registered on The Wall. Contact your admin to be added."
       );
     }
+
+    if (!member.is_active) {
+      return responseStatus(res, 401, "This account is not active");
+    }
+
+    let plainPassword = null;
 
     if (!hasWallPasswordStored(member.password)) {
+      const defaultFromEnv =
+        process.env.WALL_DEFAULT_PASSWORD || process.env.DEFAULT_PASSWORD;
+      if (defaultFromEnv && String(defaultFromEnv).trim()) {
+        const candidate = String(defaultFromEnv).trim();
+        if (!validateNewPassword(candidate)) {
+          plainPassword = candidate;
+        }
+      }
+    }
+
+    if (!plainPassword) {
+      let validationError;
+      do {
+        plainPassword = generateTemporaryWallPassword();
+        validationError = validateNewPassword(plainPassword);
+      } while (validationError);
+    }
+
+    await member.update({ password: hashWallPassword(plainPassword) });
+
+    try {
+      await emailService.sendWallForgotPasswordEmail({
+        toEmail: member.email,
+        name: member.name,
+        password: plainPassword,
+      });
+    } catch (mailErr) {
+      console.error("wall forgotPassword email:", mailErr);
       return responseStatus(
         res,
-        400,
-        "No password is set yet. Sign in with your email and create your password on the first screen."
+        500,
+        "Account found but we could not send the email. Check SMTP settings or try again later."
       );
     }
 
-    const token = jwt.sign(
-      { wallMemberId: member.id, purpose: "wall_password_reset" },
-      WALL_JWT_SECRET,
-      { expiresIn: "30m" }
+    return responseStatus(
+      res,
+      200,
+      "Your Wall password has been sent to your email."
     );
-
-    const frontBase =
-      process.env.WALL_FRONT_END_URL ||
-      process.env.FRONT_END_URL ||
-      req.headers.origin ||
-      "http://localhost:3000";
-    const encoded = encodeURIComponent(token);
-    const resetPath = `/wall/reset-password?token=${encoded}`;
-    const resetUrl = `${String(frontBase).replace(/\/$/, "")}${resetPath}`;
-
-    return responseStatus(res, 200, "Password reset link created", {
-      resetUrl,
-      resetPath,
-    });
   } catch (err) {
     console.error("wall forgotPassword:", err);
-    return responseStatus(res, 500, "Could not start password reset");
+    return responseStatus(res, 500, "Could not send password email");
   }
 };
 
