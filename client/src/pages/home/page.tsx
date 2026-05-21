@@ -212,7 +212,9 @@ export default function Home() {
               >
                 {hero.title_left}
               </span>
-              <span className="flex shrink-0 items-center justify-center self-center mx-0.5 sm:mx-1 md:mx-2">
+              <span
+  className="flex shrink-0 items-center justify-center self-center mx-0.5 sm:mx-1 md:mx-2 md:mt-[49px] mt-0 sm:mt-[40px]"
+>
                 <span className="relative flex h-11 w-11 sm:h-14 sm:w-14 md:h-[4.5rem] md:w-[4.5rem] lg:h-20 lg:w-20 items-center justify-center rounded-full border border-amber-400/35 bg-black/25 shadow-[0_0_24px_rgba(212,175,55,0.15)]">
                   <img
                     src={heroImg}
