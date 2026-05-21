@@ -386,7 +386,7 @@ function EmailField(props: {
         value={props.email}
         onChange={(e) => props.setEmail(e.target.value)}
         onBlur={props.onBlur}
-        placeholder="Your Email ID"
+        placeholder="Official Mail ID"
         required
         className="wall-login-modal__input"
       />
