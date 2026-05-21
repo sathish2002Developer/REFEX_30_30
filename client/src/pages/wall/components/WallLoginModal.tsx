@@ -386,7 +386,7 @@ function EmailField(props: {
         value={props.email}
         onChange={(e) => props.setEmail(e.target.value)}
         onBlur={props.onBlur}
-        placeholder="your emailId"
+        placeholder="Your Email ID"
         required
         className="wall-login-modal__input"
       />
@@ -416,7 +416,7 @@ function PasswordField(props: {
           type={props.showPassword ? "text" : "password"}
           value={props.password}
           onChange={(e) => props.setPassword(e.target.value)}
-          placeholder="Your password"
+          placeholder="Your Email Password"
           required
           minLength={8}
           autoComplete={props.autoComplete}
