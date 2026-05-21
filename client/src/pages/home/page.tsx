@@ -253,9 +253,9 @@ export default function Home() {
 
           <div className={`w-full max-w-[min(100%,42rem)] sm:max-w-xl mx-auto mb-5 px-1 sm:px-0 ${reveal("animate-stagger-6")}`}>
             <div className="relative w-full px-4 py-2.5 sm:px-5 border border-amber-400/40 bg-black/30 backdrop-blur-sm rounded-sm">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+              {/* <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                 <span className="text-amber-400 text-xl font-sans">&ldquo;</span>
-              </div>
+              </div> */}
               <p className="text-sm md:text-base font-serif italic text-gray-200 leading-relaxed text-center whitespace-normal break-words">
                 {hero.quote_text}
               </p>

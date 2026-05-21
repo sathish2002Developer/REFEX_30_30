@@ -228,7 +228,7 @@ export default function Vision() {
 
       {/* Our Vision Section — Hero with 3D effects */}
       <section
-        className="relative px-6 md:px-16 lg:px-24 overflow-hidden min-h-[520px] max-md:pb-6 md:min-h-[720px] flex items-start md:items-center justify-center"
+        className="relative px-6 md:px-16 lg:px-24 overflow-hidden min-h-[520px] max-md:pb-6 md:min-h-[720px] flex items-start md:items-center justify-center max-md:pt-16 md:pt-0"
       >
         <video
           ref={heroVideoRef}
@@ -248,7 +248,7 @@ export default function Vision() {
         />
 
         <div className="flex flex-col items-center relative z-10 text-gray-900">
-          <div className="max-w-4xl mx-auto text-center max-md:mt-[250px] max-md:pb-2 md:mt-[250px]">
+          <div className="max-w-4xl mx-auto  max-md:mt-[260px] max-md:pb-4 md:mt-[180px]">
             <div className="mb-3 hero-animate-1">
               <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase">
                 {cfg.hero.eyebrow}
@@ -267,13 +267,13 @@ export default function Vision() {
               {cfg.hero.headline_after}
             </h2>
 
-            <div className="mb-5 hero-animate-3 max-w-2xl mx-auto">
+            <div className="mb-5 hero-animate-3 max-w-2xl ">
               <p className="text-base font-sans text-gray-800 leading-relaxed">
                 {cfg.hero.pull_quote}
               </p>
             </div>
 
-            <div className="space-y-2 hero-animate-4 max-w-2xl mx-auto max-md:mb-0">
+            <div className="space-y-2 hero-animate-4 max-w-2xl  max-md:mb-0">
               {cfg.hero.paragraphs.map((para, pi) => (
                 <p key={pi} className="text-sm font-sans text-gray-700">
                   {para}
@@ -285,7 +285,7 @@ export default function Vision() {
       </section>
 
       {/* Corporate Metrics Dashboard */}
-      <section ref={metricsSectionRef} className="bg-white py-12 md:py-16 px-6 md:px-16 lg:px-24 relative overflow-hidden">
+      <section ref={metricsSectionRef} className="bg-white py-12 max-md:pt-10 md:py-16 px-6 md:px-16 lg:px-24 relative overflow-hidden">
         <div className="max-w-6xl mx-auto relative z-10">
           {/* Dashboard Cards — horizontal row */}
           <div
@@ -330,7 +330,7 @@ export default function Vision() {
       </section>
 
       {/* The 30 By 30 Vision - Pillars */}
-      <section className="bg-white py-14 md:py-20 px-6 md:px-16 lg:px-24 relative overflow-hidden">
+      <section className="bg-white py-14 max-md:pt-12 md:py-20 px-6 md:px-16 lg:px-24 relative overflow-hidden">
         <div className="max-w-6xl mx-auto relative z-10">
           {/* Section header */}
           <div className="text-center mb-10">
@@ -398,7 +398,7 @@ export default function Vision() {
       </section>
 
       {/* Leadership Message */}
-      <section className="py-12 md:py-16 px-6 md:px-16 lg:px-24 relative overflow-hidden">
+      <section className="py-12 max-md:pt-10 md:py-16 px-6 md:px-16 lg:px-24 relative overflow-hidden">
         <div className="relative z-10">
           <div className="mb-3">
             <span className="text-refex-gold text-xs font-sans tracking-[0.3em] uppercase">
@@ -406,7 +406,7 @@ export default function Vision() {
             </span>
           </div>
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-14">
-            <div className="lg:w-56">
+            {/* <div className="lg:w-56">
               <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border border-refex-surface-light/30 shadow-lg">
                 <img
                   src={leaderPortrait}
@@ -414,7 +414,7 @@ export default function Vision() {
                   className="w-full h-full object-cover object-top"
                 />
               </div>
-            </div>
+            </div> */}
             <div className="flex-1">
               <div
                 className="text-5xl font-serif leading-none mb-3"
